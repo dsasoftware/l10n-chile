@@ -8,7 +8,7 @@
     'description': u'''\n\nIncorporate a field with the RUT (VAT) formatted \
 according chilean customs.\n\n''',
     'installable': True,
-    'license': 'AGPL-3',
+    'license': 'LGPL-3',
     'name': 'VAT Localization Chile',
     'version': '10.0.1.0.0',
     'website': 'https://blancomartin.cl',
