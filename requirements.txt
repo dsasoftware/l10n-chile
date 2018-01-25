@@ -33,3 +33,4 @@ BeautifulSoup4
 python-magic
 SOAPpy
 erppeek
+cryptography==2.1.4
