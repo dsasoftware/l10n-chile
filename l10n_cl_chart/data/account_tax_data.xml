@@ -140,8 +140,8 @@
 
     <record id="I_IU2C" model="account.tax.template">
       <field name="chart_template_id" ref="cl_chart_template_bmya"/>
-      <field name="name">Impuesto Unico de Segunda Categoría </field>
-      <field name="description">Impuesto Unico de 2da Categoría </field>
+      <field name="name">Retención de Segunda Categoría </field>
+      <field name="description">Retención de 2da Categoría </field>
       <field name="amount">-10</field>
       <field name="sequence" eval="2"/>
       <field name="amount_type">percent</field>

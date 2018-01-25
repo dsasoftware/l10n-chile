@@ -31,5 +31,5 @@ BeautifulSoup4
 python-magic
 SOAPpy
 erppeek
-M2Crypto
+M2Crypto==0.21.1
 cryptography==2.1.4

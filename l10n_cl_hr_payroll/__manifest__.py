@@ -21,28 +21,15 @@
 {
     'name': 'Chilean Payroll',
     'category': 'Localization',
-    'author': u'''Blanco Martin & Asociados - Nelson Ramírez Sánchez,
-Daniel Blanco''',
-    'website': 'http://blancomartin.cl',
+    'author': u'''Blanco Martin & Asociados''',
+    'license': 'LGPL-3',
     'depends': ['hr_payroll'],
-    'license': 'AGPL-3',
-    'version': '10.0.2',
-    'description': """
-Chilean Payroll Salary Rules.
-============================
-
-    -Configuration of hr_payroll for Chile localization.
-    -All main contributions rules for Chile payslip.
-    * New payslip report
-    * Employee Contracts
-    * Allow to configure Basic / Gross / Net Salary
-    * Attendance, Holidays and Sick Licence   
-    * Employee PaySlip
-    * Allowance / Deduction
-    * Pention Chilean Indicators
-    * Libro de Remuneraciones , ...
-    Report
-    """,
+    'contributors': [
+        "Nelson Ramirez <info@konos.cl>",
+        "Daniel Blanco Martín <daniel@blancomartin.cl>",
+    ],
+    'license': 'LGPL-3',
+    'version': '10.0.3',
     'active': True,
     'data': [
         'views/hr_indicadores_previsionales_view.xml',
