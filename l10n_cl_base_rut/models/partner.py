@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import models, fields, api
+from odoo.exceptions import except_orm, UserError
 import re
 
 
@@ -45,8 +46,7 @@ class res_partner(models.Model):
 
     @api.onchange('document_number')
     def onchange_document(self):
-        self.document_number = self.format_document_number(
-            self.document_number)
+        self.document_number = self.format_document_number(self.document_number)
 
     @api.depends('document_number')
     def _compute_vat(self):
