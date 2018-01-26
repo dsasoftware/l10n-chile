@@ -11,7 +11,7 @@
         'l10n_cl_invoice',
         'l10n_cl_base_rut',
         'l10n_cl_partner_activities',
-        'report_xlsx'
+        # 'report_xlsx'
         ],
     'description': u'''
 Chile - Libros mensuales de Compra y Venta
