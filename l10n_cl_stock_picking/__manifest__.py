@@ -32,5 +32,5 @@
         'wizard/masive_send_dte.xml',
     ],
     'version': '10.0.3.0',
-    'installable': True,
+    'installable': False,
 }
