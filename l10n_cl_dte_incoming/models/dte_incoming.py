@@ -72,10 +72,11 @@ class IncomingDTE(models.Model):
         lines = [(5, )]
         for product_line in detail:
             _logger.info('product_line: %s' % product_line)
+            name_code = product_line.NmbItem.text.split(' ')
             line = {
                 'product_id': self.get_product_id(
-                    product_obj, product_line.VlrCodigo.text),
-                'name': product_line.NmbItem.text,
+                    product_obj, name_code[0]),
+                'name': ' '.join(name_code[:1]),
                 'product_uom_qty': product_line.QtyItem.text,
                 'price_unit': product_line.PrcItem.text
             }
