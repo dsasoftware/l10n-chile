@@ -26,7 +26,7 @@
                         <button type="object" name="create_sale_order"
                             string="Create Sale Order"
                             help="Create Sale Order"
-                            attrs="{'invisible': [('type', '!=', 'out_dte'), ('flow_status', '!=', 'new')]}"
+                            attrs="{'invisible': ['|', ('type', '!=', 'out_dte'), ('flow_status', '!=', 'new')]}"
                             icon="fa-file-o"/>
                         <field name="status" widget="statusbar" attrs="{'invisible': [('type', '=', 'out_dte')]}"/>
                         <field name="flow_status" widget="statusbar"
