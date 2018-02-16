@@ -131,6 +131,9 @@ class IncomingDTE(models.Model):
                         # 'warehouse_id' ==>> ver de donde viene
                     })
                     order_new.action_confirm()
+                    # la orden de confirmación se cambia a la hora real.
+                    order_new.write({'confirmation_date': x.date_received})
+
                     # mandar el tipo de dte, folio y fecha de la factura
                     # crear la factura
                     # asignar fecha y folio correcto
