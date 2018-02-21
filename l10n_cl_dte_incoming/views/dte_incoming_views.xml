@@ -41,7 +41,7 @@
                             <field name="sale_order_id"/>
                             <field name="purchase_order_id" attrs="{'readonly': True}"/>
                             <field name="invoice_id" attrs="{'readonly': True}"/>
-                            <field name="filename"/>
+                            <field name="filename" attrs="{'readonly': True}"/>
                         </group>
                         <notebook attrs="{'invisible': [('type', '=', 'out_dte')]}">
                             <page string="Mercadería">
