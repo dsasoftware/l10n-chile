@@ -63,10 +63,11 @@ class IncomingDTE(models.Model):
             raise UserError(
                 'El producto %s no existe en el sistema' % default_code)
 
-    def format_sale_order(self, saorder_obj, partner_id, detail):
+    def format_sale_order(self, saorder_obj, partner_id, detail, warehouse_id):
         order_dict = {
             'partner_id': partner_id.id,
             'origin': 'idn',
+            'warehouse_id': warehouse_id.id,
         }
         product_obj = self.env['product.product']
         lines = [(5, )]
@@ -95,6 +96,13 @@ class IncomingDTE(models.Model):
         _logger.info(orden_creada)
         return order_new
 
+    def _choose_warehouse(self):
+        warehouse_name = self.name.split(' ')[0]
+        stock_wh_obj = self.env['stock.warehouse']
+        stock_wh_name = stock_wh_obj.search([
+            ('code', '=', warehouse_name)])
+        return stock_wh_name
+
     def create_sale_order(self):
         for x in self:
             if x.type == 'out_dte':
@@ -120,16 +128,17 @@ class IncomingDTE(models.Model):
                         partner_id = x.create_sale_partner(
                             partner_obj, bsoup.Receptor)
                     detail = bsoup.find_all('Detalle')
+
+                    warehouse_id = x._choose_warehouse()
                     order_new = x.format_sale_order(
-                        saorder_obj, partner_id, detail)
+                        saorder_obj, partner_id, detail, warehouse_id)
                     _logger.info(detail)
                     _logger.info(order_new)
                     x.write({
                         'partner_id': partner_id.id,
                         'flow_status': 'order',
                         'sale_order_id': order_new.id,
-                        # 'warehouse_id' ==>> ver de donde viene
-                    })
+                        'warehouse_id': warehouse_id.id, })
                     order_new.action_confirm()
                     # la orden de confirmación se cambia a la hora real.
                     order_new.write({'confirmation_date': x.date_received})
