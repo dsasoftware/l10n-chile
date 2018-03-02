@@ -132,15 +132,18 @@ class SequenceCaf(models.Model):
             obj = r.env['account.journal.sii_document_class'].search(
                 [('sequence_id', '=', r.id)])
             if not obj:  # si s guía de despacho
-                obj = self.env['stock.location'].search(
-                    [('sequence_id', '=', r.id)], limit=1)
-            if obj:
-                r.is_dte = obj.sii_document_class_id.dte and \
-                           obj.sii_document_class_id.document_type in [
-                               'invoice', 'debit_note', 'credit_note',
-                               'stock_picking']
+                try:
+                    obj = r.env['stock.location'].search(
+                        [('sequence_id', '=', r.id)], limit=1)
+                except ValueError:
+                    return False
+            r.is_dte = obj.sii_document_class_id.dte and \
+                       obj.sii_document_class_id.document_type in [
+                           'invoice', 'debit_note', 'credit_note',
+                           'stock_picking']
+            r.sii_document_class = obj.sii_document_class_id.sii_code
 
-    @api.model
+    @api.multi
     def _get_sii_document_class(self):
         for r in self:
             obj = self.env['account.journal.sii_document_class'].search(
@@ -150,8 +153,7 @@ class SequenceCaf(models.Model):
                     obj = self.env['stock.location'].search(
                         [('sequence_id', '=', r.id)], limit=1)
                 except ValueError:  # cualquier otra secuencia
-                    return
-            r.sii_document_class = obj.sii_document_class_id.sii_code
+                    return False
 
     sii_document_class = fields.Integer(
         'SII Code', readonly=True, compute='_get_sii_document_class')
