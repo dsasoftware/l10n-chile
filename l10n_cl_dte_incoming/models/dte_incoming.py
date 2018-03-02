@@ -142,12 +142,10 @@ class IncomingDTE(models.Model):
                     order_new.action_confirm()
                     # la orden de confirmación se cambia a la hora real.
                     order_new.write({'confirmation_date': x.date_received})
-
                     # mandar el tipo de dte, folio y fecha de la factura
                     # crear la factura
                     # asignar fecha y folio correcto
                     # rebajar el inventario de la tienda que corresponda.
-                    # (mandar a la orden el warehouse_id que corresponda).
                     # usar el diario correcto de venta sucursal.
 
             else:
@@ -257,10 +255,11 @@ class IncomingDTE(models.Model):
         'sale.order', track_visibility='onchange')
     invoice_id = fields.Many2one(
         'account.invoice', track_visibility='onchange')
-    sii_xml_merchandise = fields.Text('sii')
-    sii_xml_request = fields.Text('sii')
-    sii_xml_accept = fields.Text('Sii')
+    sii_xml_merchandise = fields.Text('SII Merchandise')
+    sii_xml_request = fields.Text('SII Request')
+    sii_xml_accept = fields.Text('SII Accept')
     name_xml = fields.Char('Name xml')
+    payment = fields.Text('Payment Terms')
 
     @api.multi
     def receive_merchandise(self):
@@ -316,10 +315,10 @@ mercaderias o servicio(s) prestado(s) ha(n) sido recibido(s).'''
                     dicttoxml.set_debug(False)
                     id = "T" + str(soup.TipoDTE.string) + "F" + str(
                         soup.Folio.string)
-                    doc = '''
-                    <Recibo version="1.0" xmlns="http://www.sii.cl/SiiDte" \
+                    doc = '''<Recibo version="1.0" \
+xmlns="http://www.sii.cl/SiiDte" \
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" \
-xsi:schemaLocation="http://www.sii.cl/SiiDte Recibos_v10.xsd" >
+xsi:schemaLocation="http://www.sii.cl/SiiDte Recibos_v10.xsd">
                         <DocumentoRecibo ID="{0}" >
                         {1}
                         </DocumentoRecibo>
