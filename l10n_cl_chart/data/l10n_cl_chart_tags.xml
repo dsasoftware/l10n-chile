@@ -13,7 +13,7 @@
     </record>
     <record id="1101" model="account.account.tag">
         <field name="applicability">accounts</field>
-        <field name="name">1101 Disponible</field>
+        <field name="name">1101 Disponibilidad</field>
         <field name="color">0</field>
     </record>
     <record id="1102" model="account.account.tag">
@@ -83,22 +83,37 @@
     </record>
     <record id="12" model="account.account.tag">
         <field name="applicability">accounts</field>
-        <field name="name">12 Activo Fijo</field>
+        <field name="name">12 Activo No Corriente</field>
         <field name="color">0</field>
     </record>
     <record id="1201" model="account.account.tag">
         <field name="applicability">accounts</field>
-        <field name="name">1201 Muebles y Utiles</field>
+        <field name="name">1201 Deudores Morosos</field>
         <field name="color">0</field>
     </record>
     <record id="1202" model="account.account.tag">
         <field name="applicability">accounts</field>
-        <field name="name">1202 Bienes Raíces</field>
+        <field name="name">1202 Deudores en Gestión Judicial</field>
         <field name="color">0</field>
     </record>
     <record id="1203" model="account.account.tag">
         <field name="applicability">accounts</field>
-        <field name="name">1203 Depreciaciones Acumuladas</field>
+        <field name="name">1203 Depreciaciones</field>
+        <field name="color">0</field>
+    </record>
+    <record id="1211" model="account.account.tag">
+        <field name="applicability">accounts</field>
+        <field name="name">1211 Muebles y Utiles</field>
+        <field name="color">0</field>
+    </record>
+    <record id="1212" model="account.account.tag">
+        <field name="applicability">accounts</field>
+        <field name="name">1212 Bienes Raíces</field>
+        <field name="color">0</field>
+    </record>
+    <record id="1213" model="account.account.tag">
+        <field name="applicability">accounts</field>
+        <field name="name">1213 Depreciaciones Acumuladas</field>
         <field name="color">0</field>
     </record>
     <record id="13" model="account.account.tag">

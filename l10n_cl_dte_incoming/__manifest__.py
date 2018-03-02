@@ -8,10 +8,6 @@
     'author':  'BMyA SA - Blanco Martín & Asociados',
     'website': 'http://blancomartin.cl',
     'license': 'AGPL-3',
-    'summary': '',
-    'description': """
-Chile: Module to mantain incoming DTEs
-""",
     'depends': [
         'sale', 'purchase',
         'mail',
