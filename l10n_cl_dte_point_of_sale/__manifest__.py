@@ -53,7 +53,7 @@ Chile: API and GUI to access Electronic Invoicing webservices for Point of Sale.
     'qweb': [
         'static/src/xml/layout.xml',
     ],
-    'installable': True,
+    'installable': False,
     'auto_install': False,
     'application': False,
 }
