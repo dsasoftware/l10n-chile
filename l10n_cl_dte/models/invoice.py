@@ -39,6 +39,7 @@ try:
 except:
     from StringIO import StringIO
 
+from OpenSSL.crypto import *
 normalize_tags = pysiidte.normalize_tags
 pluralizeds = pysiidte.pluralizeds
 result = xmltodict.parse(pysiidte.stamp)
@@ -674,7 +675,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
         from cryptography.hazmat.primitives.serialization \
             import load_pem_private_key
         import OpenSSL
-        from OpenSSL.crypto import *
+        # from OpenSSL.crypto import *
         type_ = FILETYPE_PEM
         key = OpenSSL.crypto.load_privatekey(type_, privkey.encode('ascii'))
         signature = OpenSSL.crypto.sign(key, signed_info_c14n, 'sha1')
