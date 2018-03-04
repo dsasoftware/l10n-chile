@@ -27,7 +27,7 @@ pysimplesoap==1.08.8
 python-magic
 signxml>=2.4
 SOAPpy
-suds
+suds-jurko
 urllib3
 woocommerce
 xlrd
