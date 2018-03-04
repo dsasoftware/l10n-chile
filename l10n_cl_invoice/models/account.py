@@ -151,7 +151,6 @@ class account_move(models.Model):
 
     """
     def _get_document_data(self, cr, uid, ids, name, arg, context=None):
-        """ TODO """
         res = {}
         for record in self.browse(cr, uid, ids, context=context):
             document_number = False
