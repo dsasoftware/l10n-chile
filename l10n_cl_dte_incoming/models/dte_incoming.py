@@ -63,19 +63,21 @@ class IncomingDTE(models.Model):
             raise UserError(
                 'El producto %s no existe en el sistema' % default_code)
 
-    def format_sale_order(self, saorder_obj, partner_id, detail):
+    def format_sale_order(self, saorder_obj, partner_id, detail, warehouse_id):
         order_dict = {
             'partner_id': partner_id.id,
             'origin': 'idn',
+            'warehouse_id': warehouse_id.id,
         }
         product_obj = self.env['product.product']
         lines = [(5, )]
         for product_line in detail:
             _logger.info('product_line: %s' % product_line)
+            name_code = product_line.NmbItem.text.split(' ')
             line = {
                 'product_id': self.get_product_id(
-                    product_obj, product_line.VlrCodigo.text),
-                'name': product_line.NmbItem.text,
+                    product_obj, name_code[0]),
+                'name': ' '.join(name_code[:1]),
                 'product_uom_qty': product_line.QtyItem.text,
                 'price_unit': product_line.PrcItem.text
             }
@@ -93,6 +95,13 @@ class IncomingDTE(models.Model):
         }
         _logger.info(orden_creada)
         return order_new
+
+    def _choose_warehouse(self):
+        warehouse_name = self.name.split(' ')[0]
+        stock_wh_obj = self.env['stock.warehouse']
+        stock_wh_name = stock_wh_obj.search([
+            ('code', '=', warehouse_name)])
+        return stock_wh_name
 
     def create_sale_order(self):
         for x in self:
@@ -119,22 +128,24 @@ class IncomingDTE(models.Model):
                         partner_id = x.create_sale_partner(
                             partner_obj, bsoup.Receptor)
                     detail = bsoup.find_all('Detalle')
+
+                    warehouse_id = x._choose_warehouse()
                     order_new = x.format_sale_order(
-                        saorder_obj, partner_id, detail)
+                        saorder_obj, partner_id, detail, warehouse_id)
                     _logger.info(detail)
                     _logger.info(order_new)
                     x.write({
                         'partner_id': partner_id.id,
                         'flow_status': 'order',
                         'sale_order_id': order_new.id,
-                        # 'warehouse_id' ==>> ver de donde viene
-                    })
+                        'warehouse_id': warehouse_id.id, })
                     order_new.action_confirm()
+                    # la orden de confirmación se cambia a la hora real.
+                    order_new.write({'confirmation_date': x.date_received})
                     # mandar el tipo de dte, folio y fecha de la factura
                     # crear la factura
                     # asignar fecha y folio correcto
                     # rebajar el inventario de la tienda que corresponda.
-                    # (mandar a la orden el warehouse_id que corresponda).
                     # usar el diario correcto de venta sucursal.
 
             else:
@@ -244,10 +255,11 @@ class IncomingDTE(models.Model):
         'sale.order', track_visibility='onchange')
     invoice_id = fields.Many2one(
         'account.invoice', track_visibility='onchange')
-    sii_xml_merchandise = fields.Text('sii')
-    sii_xml_request = fields.Text('sii')
-    sii_xml_accept = fields.Text('Sii')
+    sii_xml_merchandise = fields.Text('SII Merchandise')
+    sii_xml_request = fields.Text('SII Request')
+    sii_xml_accept = fields.Text('SII Accept')
     name_xml = fields.Char('Name xml')
+    payment = fields.Text('Payment Terms')
 
     @api.multi
     def receive_merchandise(self):
@@ -303,10 +315,10 @@ mercaderias o servicio(s) prestado(s) ha(n) sido recibido(s).'''
                     dicttoxml.set_debug(False)
                     id = "T" + str(soup.TipoDTE.string) + "F" + str(
                         soup.Folio.string)
-                    doc = '''
-                    <Recibo version="1.0" xmlns="http://www.sii.cl/SiiDte" \
+                    doc = '''<Recibo version="1.0" \
+xmlns="http://www.sii.cl/SiiDte" \
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" \
-xsi:schemaLocation="http://www.sii.cl/SiiDte Recibos_v10.xsd" >
+xsi:schemaLocation="http://www.sii.cl/SiiDte Recibos_v10.xsd">
                         <DocumentoRecibo ID="{0}" >
                         {1}
                         </DocumentoRecibo>

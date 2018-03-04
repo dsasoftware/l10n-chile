@@ -1,45 +1,29 @@
 #
-# Consumidor final mas de 1000 $
+# Clientes de Boleta
 #
 - !record {model: res.partner, id: par_cf_gm }:
-    name: Cristian Sebastian Rocha
+    name: Daniel Blanco
     responsability_id: res_CF
-    document_type_id: dt_DNI
-    document_number: 25095454
-    street: Av. Rivadavia
-    city: Capital Federal
-    state_id: l10n_cl_states.C
-    country_id: base.cl
-    zip: 1407
-
-#
-# IVA exento
-#
-- Create partner
-- !record {model: res.partner, id: par_ivae }:
-    name: ASOCIACION DOCENTES DE LA UNIVERSIDAD NACIONAL DE BUENOS AIRES
-    responsability_id: res_IVAE
     document_type_id: dt_RUT
-    document_number: 30681521077
-    vat: ar30681521077
-    street: Azcuenaga 770
-    city: Capital Federal
-    state_id: l10n_cl_states.C
+    document_number:
+    street: Av. Apoquindo 6410
+    city: Santiago
+    state_id: l10n_cl_counties.CL13114
     country_id: base.cl
-    zip: 1029
 
-- Create company
-- !record {model: res.company, id: com_ivae }:
-    name: ASOCIACION DOCENTES DE LA UNIVERSIDAD NACIONAL DE BUENOS AIRES
-    partner_id: par_ivae
-    rml_header1: .
-    rml_header2: Web - Tel -
-    rml_header3: RUT - 
-    currency_id: base.CLP
-    parent_id: base.main_company
+- !record {model: res.partner, id: par_cf_gm }:
+    name: Consumidor Final
+    responsability_id: res_CF
+    document_type_id: dt_RUT
+    document_number: 66666666-6
+    street: Av. Apoquindo 6410
+    city: Santiago
+    state_id: l10n_cl_counties.CL13114
+    country_id: base.cl
+
 
 #
-# IVA responsable inscripto
+# 1ra Categoría
 #
 - Create partner
 - !record {model: res.partner, id: par_ivari }:
