@@ -539,7 +539,7 @@ version="1.0">
 
 
 #        """
-#        Funcion para validar los xml generados contra el esquema que le
+#        Funcion para validate los xml generados contra el esquema que le
 #        corresponda segun el tipo de documento.
 #        @author: Daniel Blanco Martin (daniel[at]blancomartin.cl)
 #        @version: 2016-06-01. Se agregó validación para boletas
@@ -1145,7 +1145,7 @@ realizar en su documento.""")
         # esto sobreescribe el calculo del mntexe que viene por parametros
         # para hacer: corregir desde antes, o cambiar el metodo de calcular
         # para hacer: el mntexe siempre existe solo que si no hay neto, se
-        # debe validar que el tipo de documento valido para estos casos debe
+        # debe validate que el tipo de documento valido para estos casos debe
         # ser exenta
         if self.sii_document_class_id.sii_code == 34 or (
                 self.referencias and self.referencias[0].
@@ -2082,16 +2082,16 @@ hacer eso en un envío')
             'tag': 'action_upload_xml_wizard'}
 
     @api.multi
-    def wizard_validar(self):
+    def wizard_validate(self):
         return {
             'type': 'ir.actions.act_window',
-            'res_model': 'sii.dte.validar.wizard',
+            'res_model': 'sii.dte.validate.wizard',
             'src_model': 'account.invoice',
             'view_mode': 'form',
             'view_type': 'form',
             'views': [(False, 'form')],
             'target': 'new',
-            'tag': 'action_validar_wizard'}
+            'tag': 'action_validate_wizard'}
 
     @api.multi
     def invoice_print(self):

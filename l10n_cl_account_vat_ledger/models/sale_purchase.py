@@ -141,8 +141,7 @@ class AccountMoveBook(models.Model):
         ('Proceso', 'Proceso'),
         ('Reenviar', 'Reenviar'),
         ('Anulado', 'Anulado')],
-        'Resultado'
-        , index=True, readonly=True, default='draft',
+        'Resultado', readonly=True, default='draft',
         track_visibility='onchange', copy=False,
         help=""" * The 'Draft' status is used when a user is encoding a new and\
 unconfirmed Invoice.\n
@@ -152,15 +151,16 @@ generated. Its in open status till user does not pay invoice.\n
 * The 'Paid' status is set automatically when the invoice is paid. Its related
  journal entries may or may not be reconciled.\n
 * The 'Cancelled' status is used when user cancel invoice.""")
-    move_ids = fields.Many2many('account.move',
-        readonly=True,
-        states={'draft': [('readonly', False)]})
-
+    journal_ids = fields.Many2many(
+        'account.journal', readonly=True,
+        states={'draft': [('readonly', False)], })
+    move_ids = fields.Many2many(
+        'account.move', readonly=True, states={'draft': [('readonly', False)]})
     invoice_ids = fields.Many2many(
         'account.invoice', readonly=True,
         states={'draft': [('readonly', False)]})
 
-    tipo_libro = fields.Selection([
+    report_type = fields.Selection([
                 ('ESPECIAL', 'Especial'),
                 ('MENSUAL', 'Mensual'),
                 ('RECTIFICA', 'Rectifica'),
@@ -174,39 +174,39 @@ generated. Its in open status till user does not pay invoice.\n
 Especial: corresponde a un libro solicitado vía una notificación.
 Rectifica: Corresponde a un libro que reemplaza a uno ya recibido por el SII, \
 requiere un Código de Autorización de Reemplazo de Libro Electrónico.""")
-    tipo_operacion = fields.Selection([
-                ('COMPRA', 'Compras'),
-                ('VENTA', 'Ventas'),
-                ('BOLETA', 'Boleta'), ],
+    operation_type = fields.Selection([
+                ('purchase', 'Purchases'),
+                ('sale', 'Sales'), ],
                 string="Tipo de operación",
-                default="COMPRA",
+                default="purchase",
                 required=True,
                 readonly=True,
                 states={'draft': [('readonly', False)]}
             )
-    tipo_envio = fields.Selection([
-        ('AJUSTE', 'Ajuste'), ('TOTAL', 'Total'),
-        ('PARCIAL', 'Parcial'), ('TOTAL', 'Total'), ], string="Tipo de Envío",
+    include_receipts = fields.Boolean('Include Receipts', default=True)
+    sending_type = fields.Selection([
+        ('AJUSTE', 'Ajuste'), ('PARCIAL', 'Parcial'), ('TOTAL', 'Total'), ],
+        string="Tipo de Envío",
         default="TOTAL", required=True, readonly=True,
         states={'draft': [('readonly', False)], })
-    folio_notificacion = fields.Char(
+    notification_number = fields.Char(
         string="Folio de Notificación", readonly=True,
         states={'draft': [('readonly', False)], })
-    impuestos = fields.One2many(
+    taxes = fields.One2many(
         'account.move.book.tax', 'book_id', string="Detalle Impuestos")
     currency_id = fields.Many2one(
         'res.currency', string='Moneda',
         default=lambda self: self.env.user.company_id.currency_id,
         required=True, track_visibility='always')
-    total_afecto = fields.Monetary(
+    total_vat_affected = fields.Monetary(
         string="Total Afecto", readonly=True, compute="set_values",
         store=True)
-    total_exento = fields.Monetary(
+    total_exempt = fields.Monetary(
         string="Total Exento", readonly=True, compute='set_values', store=True)
-    total_iva = fields.Monetary(
+    total_vat = fields.Monetary(
         string="Total IVA", readonly=True, compute='set_values',
         store=True)
-    total_otros_imps = fields.Monetary(
+    total_other_taxes = fields.Monetary(
         string="Total Otros Impuestos", readonly=True, compute='set_values',
         store=True)
     total = fields.Monetary(
@@ -223,7 +223,7 @@ requiere un Código de Autorización de Reemplazo de Libro Electrónico.""")
     name = fields.Char(
         string="Detalle", required=True, readonly=True,
         states={'draft': [('readonly', False)], })
-    fact_prop = fields.Float(
+    proportion_factor = fields.Float(
         string="Factor proporcionalidad", readonly=True,
         states={'draft': [('readonly', False)], })
     nro_segmento = fields.Integer(
@@ -234,10 +234,10 @@ requiere un Código de Autorización de Reemplazo de Libro Electrónico.""")
         string="Fecha", required=True, readonly=True,
         default=lambda x: datetime.now(),
         states={'draft': [('readonly', False)], })
-    boletas = fields.One2many(
-        'account.move.book.boletas', 'book_id', string="Boletas", readonly=True,
+    receipts = fields.One2many(
+        'account.move.book.receipts', 'book_id', string="receipts", readonly=True,
         states={'draft': [('readonly', False)]})
-    codigo_rectificacion = fields.Char(string="Código de Rectificación")
+    amendment_code = fields.Char(string="Código de Rectificación")
 
     @staticmethod
     def line_tax_view():
@@ -416,7 +416,7 @@ sum(case when "IVARetParcial" > 0 then "IVARetParcial" else 0 end)
 as "TotIVARetParcial",
 /* TotOpActivoFijo, TotMntActivoFijo, TotMntIVAActivoFijo */
 sum("IVANoRec") as "TotIVANoRec",
-/* El TOT da la cantidad de iteraciones dentro de
+/* El TOT da la quantity de iteraciones dentro de
 la matriz (normalmente 1)*/
 /*max((case when "IVANoRec" > 0 then at_sii_code else 0 end))
 as "CodIVANoRec",*/
@@ -483,7 +483,7 @@ group by "TpoDoc", "NroDoc",
 order by "TpoDoc", "NroDoc") b
 group by
 "TpoDoc"
-""" % (self.fact_prop, self.line_tax_view(), ', '.join(account_invoice_ids))
+""" % (self.proportion_factor, self.line_tax_view(), ', '.join(account_invoice_ids))
         # raise UserError(a)
         return a
 
@@ -536,19 +536,19 @@ order by "TpoDoc", "NroDoc"
     def _record_totals(self, jvalue):
         _logger.info(json.dumps(jvalue))
         if jvalue:
-            self.total_afecto = sum([x['TotMntNeto'] for x in jvalue])
-            self.total_exento = sum([x['TotMntExe'] for x in jvalue])
-            self.total_iva = sum([x['TotMntIVA'] for x in jvalue])
-            self.total_otros_imps = 0
+            self.total_vat_affected = sum([x['TotMntNeto'] for x in jvalue])
+            self.total_exempt = sum([x['TotMntExe'] for x in jvalue])
+            self.total_vat = sum([x['TotMntIVA'] for x in jvalue])
+            self.total_other_taxes = 0
             self.total = sum([x['TotMntIVA'] for x in jvalue])
 
     @staticmethod
     def _envelope_book(xml_pret):
         return """<?xml version="1.0" encoding="ISO-8859-1"?>
-<LibroCompraVenta xmlns="http://www.sii.cl/SiiDte" \
+<Libropurchasesale xmlns="http://www.sii.cl/SiiDte" \
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" \
 xsi:schemaLocation="http://www.sii.cl/SiiDte LibroCV_v10.xsd" version="1.0">\
-{}</LibroCompraVenta>""".format(xml_pret)
+{}</Libropurchasesale>""".format(xml_pret)
 
     @staticmethod
     def insert_son_values(
@@ -619,7 +619,7 @@ xsi:schemaLocation="http://www.sii.cl/SiiDte LibroCV_v10.xsd" version="1.0">\
                 tag_replace_2, '').replace('uTasaImp', 'TasaImp')
             print xml_detail2
             # raise UserError('xml_detail2')
-            xml_envio_libro = """<EnvioLibro ID="{}">\
+            xml_envio_report = """<EnvioLibro ID="{}">\
 <Caratula>\
 <RutEmisorLibro>{}</RutEmisorLibro>\
 <RutEnvia>{}</RutEnvia>\
@@ -638,16 +638,16 @@ xsi:schemaLocation="http://www.sii.cl/SiiDte LibroCV_v10.xsd" version="1.0">\
                 self.fiscal_period,
                 resol_data['dte_resolution_date'],
                 resol_data['dte_resolution_number'],
-                self.tipo_operacion,
-                self.tipo_libro,
-                self.tipo_envio,
-                self.folio_notificacion or '',
-                self.codigo_rectificacion or '',
+                self.operation_type,
+                self.report_type,
+                self.sending_type,
+                self.notification_number or '',
+                self.amendment_code or '',
                 xml_detail1, xml_detail2, inv_obj.time_stamp()).replace(
                 '<FolioNotificacion></FolioNotificacion>', '', 1).replace(
                 '<CodAutRec></CodAutRec>', '', 1)
-            _logger.info(xml_envio_libro)
-            xml1 = xml.dom.minidom.parseString(xml_envio_libro)
+            _logger.info(xml_envio_report)
+            xml1 = xml.dom.minidom.parseString(xml_envio_report)
             xml_pret = xml1.toprettyxml()
             if True:  # try:
                 xml_pret = inv_obj.convert_encoding(
@@ -671,7 +671,7 @@ guardada del xml es la siguiente: {}'.format(xml_pret))
             return False
 
     @api.depends('name', 'date', 'company_id', 'invoice_ids', 'fiscal_period',
-                 'tipo_operacion', 'tipo_libro', 'tipo_envio', 'fact_prop')
+                 'operation_type', 'report_type', 'sending_type', 'proportion_factor')
     def set_values(self):
         if not self.name and not self.invoice_ids:
             return
@@ -683,13 +683,13 @@ guardada del xml es la siguiente: {}'.format(xml_pret))
         self.sii_xml_request = xml_pret
 
     @api.multi
-    def validar_libro(self):
+    def validate_report(self):
         inv_obj = self.env['account.invoice']
         if self.state not in ['draft', 'NoEnviado', 'Rechazado']:
             raise UserError('El libro se encuentra en estado: {}'.format(
                 self.state))
         company_id = self.company_id
-        doc_id = self.tipo_operacion + '_' + self.fiscal_period
+        doc_id = self.operation_type + '_' + self.fiscal_period
         result = inv_obj.send_xml_file(
             self.sii_xml_request, doc_id + '.xml', company_id)
         self.write({
@@ -750,41 +750,41 @@ SII, intente en 5s más")}}
                 return status
 
 
-class Boletas(models.Model):
-    _name = 'account.move.book.boletas'
+class receipts(models.Model):
+    _name = 'account.move.book.receipts'
 
     currency_id = fields.Many2one('res.currency',
         string='Moneda',
         default=lambda self: self.env.user.company_id.currency_id,
         required=True,
         track_visibility='always')
-    tipo_boleta = fields.Many2one('sii.document_class',
-        string="Tipo de Boleta",
+    receipt_type = fields.Many2one('sii.document_class',
+        string="Tipo de receipt",
         required=True,
         domain=[('document_letter_id.name','in',['B','M'])])
-    rango_inicial = fields.Integer(
+    initial_range = fields.Integer(
         string="Rango Inicial",
         required=True)
-    rango_final = fields.Integer(
+    final_range = fields.Integer(
         string="Rango Final",
         required=True)
-    cantidad_boletas = fields.Integer(
-        string="Cantidad Boletas",
+    quantity_receipts = fields.Integer(
+        string="Cantidad receipts",
         rqquired=True)
-    neto = fields.Monetary(
+    net_amount = fields.Monetary(
         string="Monto Neto",
         required=True)
-    impuesto = fields.Many2one('account.tax',
+    tax = fields.Many2one('account.tax',
         string="Impuesto",
         required=True,
         domain=[('type_tax_use', '!=', 'none'), '|', ('active', '=', False),
                 ('active', '=', True)])
-    monto_impuesto = fields.Monetary(
-        compute='_monto_total',
+    amount_tax = fields.Monetary(
+        compute='_amount_total',
         string="Monto Impuesto",
         required=True)
-    monto_total = fields.Monetary(
-        compute='_monto_total',
+    amount_total = fields.Monetary(
+        compute='_amount_total',
         string="Monto Total",
         required=True)
     book_id = fields.Many2one('account.move.book')
@@ -795,7 +795,7 @@ class ImpuestosLibro(models.Model):
     def get_monto(self):
         for t in self:
             t.amount = t.debit - t.credit
-            if t.book_id.tipo_operacion in ['VENTA']:
+            if t.book_id.operation_type in ['sale']:
                 t.amount = t.credit - t.debit
 
     tax_id = fields.Many2one('account.tax', string="Impuesto")

@@ -20,8 +20,6 @@ try:
 except:
     from StringIO import StringIO
 
-import traceback as tb
-import suds.metrics as metrics
 
 try:
     from suds.client import Client
@@ -107,7 +105,7 @@ connection_status = {
 }
 
 class ConsumoFolios(models.Model):
-    _name = "account.move.consumo_folios"
+    _name = "account.move.receipt_consumption"
 
     sii_message = fields.Text(
         string='SII Message',
@@ -550,7 +548,7 @@ version="1.0">
         file_name = self.name.replace(' ','_')
         return {
             'type' : 'ir.actions.act_url',
-            'url': '/web/binary/download_document?model=account.move.consumo_folios\
+            'url': '/web/binary/download_document?model=account.move.receipt_consumption\
 &field=sii_xml_request&id=%s&filename=%s.xml' % (self.id, file_name),
             'target': 'self',
         }
@@ -584,7 +582,7 @@ version="1.0">
             self.name += " " + self.fiscal_period
 
     @api.multi
-    def validar_consumo_folios(self):
+    def validar_receipt_consumption(self):
         self._validar()
         return self.write({'state': 'NoEnviado'})
 
@@ -621,16 +619,16 @@ version="1.0">
         MntExe = 0
         TaxMnt = 0
         tasa = False
-        ivas = imp = impuestos = {}
+        ivas = imp = taxes = {}
         if 'lines' in rec:
             for line in rec.lines:
                 if line.tax_ids:
                     for t in line.tax_ids:
-                        impuestos.setdefault(t.id, [t, 0])
-                        impuestos[t.id][1] += line.price_subtotal_incl
-            for key, t in impuestos.iteritems():
+                        taxes.setdefault(t.id, [t, 0])
+                        taxes[t.id][1] += line.price_subtotal_incl
+            for key, t in taxes.iteritems():
                 Neto, TaxMnt, MntExe, ivas, imp = self._process_imps(t[0], t[1], rec.pricelist_id.currency_id, Neto, TaxMnt, MntExe, ivas, imp)
-        else:  # si la boleta fue hecha por contabilidad
+        else:  # si la receipt fue hecha por contabilidad
             for l in rec.line_ids:
                 if l.tax_line_id:
                     if l.tax_line_id and l.tax_line_id.amount > 0: #supuesto iva único
@@ -666,9 +664,9 @@ version="1.0">
             det['MntIVA'] = int(round(TaxMnt))
             for key, t in ivas.iteritems():
                 det['TasaIVA'] = t[0].amount
-        monto_total = int(round((Neto + MntExe + TaxMnt), 0))
+        amount_total = int(round((Neto + MntExe + TaxMnt), 0))
         det['MntNeto'] = int(round(Neto))
-        det['MntTotal'] = monto_total
+        det['MntTotal'] = amount_total
         return det
 
     def _last(self, folio, items):# se asumen que vienen ordenados de menor a mayor
@@ -677,52 +675,52 @@ version="1.0">
                 return c
         return False
 
-    def _nuevo_rango(self, folio, f_contrario, contrarios):
+    def _nuevo_range(self, folio, f_contrario, contrarios):
         last = self._last(folio, contrarios)#obtengo el último tramo de los contrarios
         if last and last['Inicial'] > f_contrario:
             return True
         return False
 
-    def _orden(self, folio, rangos, contrarios, continuado=True):
-        last = self._last(folio, rangos)
-        if not continuado or not last or  self._nuevo_rango(folio, last['Final'], contrarios):
+    def _orden(self, folio, ranges, contrarios, continuado=True):
+        last = self._last(folio, ranges)
+        if not continuado or not last or  self._nuevo_range(folio, last['Final'], contrarios):
             r = collections.OrderedDict()
             r['Inicial'] = folio
             r['Final'] = folio
-            rangos.append(r)
-            return rangos
+            ranges.append(r)
+            return ranges
         result = []
-        for r in rangos:
+        for r in ranges:
             if r['Final'] == last['Final'] and folio > last['Final']:
                 r['Final'] = folio
             result.append(r)
         return result
 
-    def _rangosU(self, resumen, rangos, continuado=True):
-        if not rangos:
-            rangos = collections.OrderedDict()
+    def _rangesU(self, resumen, ranges, continuado=True):
+        if not ranges:
+            ranges = collections.OrderedDict()
         folio = resumen['NroDoc']
         if 'A' in resumen:
-            utilizados = rangos['itemUtilizados'] if 'itemUtilizados' in rangos else []
-            if not 'itemAnulados' in rangos:
-                rangos['itemAnulados'] = []
+            utilizados = ranges['itemUtilizados'] if 'itemUtilizados' in ranges else []
+            if not 'itemAnulados' in ranges:
+                ranges['itemAnulados'] = []
                 r = collections.OrderedDict()
                 r['Inicial'] = folio
                 r['Final'] = folio
-                rangos['itemAnulados'].append(r)
+                ranges['itemAnulados'].append(r)
             else:
-                rangos['itemAnulados'] = self._orden(resumen['NroDoc'], rangos['itemAnulados'], utilizados, continuado)
-                return rangos
-        anulados = rangos['itemAnulados'] if 'itemAnulados' in rangos else []
-        if not 'itemUtilizados' in rangos:
-            rangos['itemUtilizados'] = []
+                ranges['itemAnulados'] = self._orden(resumen['NroDoc'], ranges['itemAnulados'], utilizados, continuado)
+                return ranges
+        anulados = ranges['itemAnulados'] if 'itemAnulados' in ranges else []
+        if not 'itemUtilizados' in ranges:
+            ranges['itemUtilizados'] = []
             r = collections.OrderedDict()
             r['Inicial'] = folio
             r['Final'] = folio
-            rangos['itemUtilizados'].append(r)
+            ranges['itemUtilizados'].append(r)
         else:
-            rangos['itemUtilizados'] = self._orden(resumen['NroDoc'], rangos['itemUtilizados'], anulados, continuado)
-        return rangos
+            ranges['itemUtilizados'] = self._orden(resumen['NroDoc'], ranges['itemUtilizados'], anulados, continuado)
+        return ranges
 
     def _setResumen(self,resumen,resumenP,continuado=True):
         resumenP['TipoDocumento'] = resumen['TpoDoc']
@@ -765,7 +763,7 @@ version="1.0">
             resumenP['FoliosUtilizados'] = 1
         if not str(resumen['TpoDoc'])+'_folios' in resumenP:
             resumenP[str(resumen['TpoDoc'])+'_folios'] = collections.OrderedDict()
-        resumenP[str(resumen['TpoDoc'])+'_folios'] = self._rangosU(resumen, resumenP[str(resumen['TpoDoc'])+'_folios'], continuado)
+        resumenP[str(resumen['TpoDoc'])+'_folios'] = self._rangesU(resumen, resumenP[str(resumen['TpoDoc'])+'_folios'], continuado)
         return resumenP
 
     def _validar(self):
@@ -790,7 +788,7 @@ version="1.0">
         for rec in recs:
             document_class_id = rec.document_class_id if 'document_class_id' in rec else rec.sii_document_class_id
             if not document_class_id or document_class_id.sii_code not in [39, 41, 61]:
-                _logger.info("Por este medio solamente e pueden declarar Boletas o Notas de crédito Electrónicas, por favor elimine el documento %s del listado" % rec.name)
+                _logger.info("Por este medio solamente e pueden declarar receipts o Notas de crédito Electrónicas, por favor elimine el documento %s del listado" % rec.name)
                 continue
             rec.sended = True
             if not rec.sii_document_number:
@@ -824,14 +822,14 @@ version="1.0">
             if str(r)+'_folios' in value:
                 folios = value[ str(r)+'_folios' ]
                 if 'itemUtilizados' in folios:
-                    for rango in folios['itemUtilizados']:
+                    for range in folios['itemUtilizados']:
                         utilizados = []
-                        utilizados.append({'RangoUtilizados': rango})
+                        utilizados.append({'RangoUtilizados': range})
                     folios['itemUtilizados'] = utilizados
                 if 'itemAnulados' in folios:
-                    for rango in folios['itemAnulados']:
+                    for range in folios['itemAnulados']:
                         anulados = []
-                        anulados.append({'RangoAnulados': rango})
+                        anulados.append({'RangoAnulados': range})
                     folios['itemAnulados'] = anulados
                 value[ str(r)+'_folios' ] = folios
             Resumen.extend([ {'Resumen':value}])
@@ -870,7 +868,7 @@ version="1.0">
         return envio_dte, doc_id
 
     @api.multi
-    def do_dte_send_consumo_folios(self):
+    def do_dte_send_receipt_consumption(self):
         if self.state not in ['NoEnviado', 'Rechazado']:
             raise UserError("El Libro  ya ha sido enviado")
         envio_dte, doc_id =  self._validar()

@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
 #
-# Copyright (C) 2015 Odoo - Team de Localización Chile.
-# https://github.com/odoo-chile
+# Copyright (C) 2015 Odoo - Blanco Martín & Asociados
+# https://github.com/bmya/l10n-chile-11
 #
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
+# it under the terms of the LESSER GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
@@ -18,7 +18,5 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
+from . import account_move_send_multi
 
-from . import build_and_send_moves
-
-# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

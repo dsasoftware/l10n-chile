@@ -2,6 +2,7 @@
 from odoo.addons.report_xlsx.report.report_xlsx import ReportXlsx
 from datetime import datetime
 
+
 class LibroXlsx(ReportXlsx):
 
     def generate_xlsx_report(self, workbook, data, libro):
@@ -14,7 +15,7 @@ class LibroXlsx(ReportXlsx):
             sheet.write(0, 1, obj.company_id.name, bold)
             sheet.write(0, 2, obj.fiscal_period, bold)
             sheet.write(0, 3, obj.tipo_operacion, bold)
-            sheet.write(0, 4, obj.tipo_libro, bold)
+            sheet.write(0, 4, obj.tipo_report, bold)
             sheet.write(0, 5, obj.tipo_operacion, bold)
             sheet.write(2, 0, u"Tipo de Documento", bold)
             sheet.write(2, 1, u"Número", bold)
@@ -57,5 +58,5 @@ class LibroXlsx(ReportXlsx):
 LibroXlsx('report.account.move.book.xlsx',
             'account.move.book')
 
-LibroXlsx('report.account.move.book.honorarios.xlsx',
-            'account.move.book.honorarios')
+LibroXlsx('report.account.move.book.fees.xlsx',
+            'account.move.book.fees')

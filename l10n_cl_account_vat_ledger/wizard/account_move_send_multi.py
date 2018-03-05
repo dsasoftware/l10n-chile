@@ -6,7 +6,7 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
-class masive_send_dte_wizard(models.TransientModel):
+class SendDteMulti(models.TransientModel):
     _name = 'sii.dte.build.sales.book.wizard'
     _description = 'SII Build Sales Book'
 
@@ -35,8 +35,8 @@ class masive_send_dte_wizard(models.TransientModel):
         #raise UserError("%s %s" %(self._context.get('active_ids'), self.move_ids))
         data ={
                 'move_ids': self.move_ids,
-                'tipo_libro': 'ESPECIAL',
-                'tipo_operacion': 'COMPRA',
+                'tipo_report': 'ESPECIAL',
+                'tipo_operacion': 'purchase',
                 'tipo_envio': 'TOTAL',
                 'folio_notificacion': 612124,
                 'fiscal_period': '2016-07',
@@ -44,5 +44,5 @@ class masive_send_dte_wizard(models.TransientModel):
             }
         libro = self.env['account.move.libro'].create(data)
         libro.write(data)
-        libro.do_dte_send_libro()
+        libro.do_dte_send_report()
         #return UserError("Enviado")

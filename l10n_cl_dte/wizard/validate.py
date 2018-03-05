@@ -7,7 +7,7 @@ _logger = logging.getLogger(__name__)
 
 
 class ValidarDTEWizard(models.TransientModel):
-    _name = 'sii.dte.validar.wizard'
+    _name = 'sii.dte.validate.wizard'
     _description = 'SII XML from Provider'
 
     action = fields.Selection([
@@ -26,4 +26,4 @@ class ValidarDTEWizard(models.TransientModel):
         if self.action == 'receipt':
             wiz.do_receipt()
         if self.action == 'validate':
-            wiz.do_validar_comercial()
+            wiz.do_validate_comercial()

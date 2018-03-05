@@ -589,7 +589,7 @@ exponent. AND DIGEST""")
     name = fields.Char(string="Detalle" , required=True)
 
     @api.multi
-    def validar_libro(self):
+    def validate_libro(self):
         self._crear_libro()
         return self.write({'state': 'NoEnviado'})
 

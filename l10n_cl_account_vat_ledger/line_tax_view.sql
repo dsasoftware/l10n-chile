@@ -115,6 +115,6 @@ create or replace view line_tax_view as (
 	on ar.tipo = dcl.id) as ref
 	on ref.invoice_id = ai.id
 	/*where ai.id in (69, 70, 71, 78, 76, 77, 79)*/
-	/* and aj.id in (id de los diarios de compra que se reportan) */
+	/* and aj.id in (id de los diarios de purchase que se reportan) */
 	order by ai.id, al.id, dcl.sii_code, at.id) a
 )

@@ -6,10 +6,11 @@ import dateutil.relativedelta as relativedelta
 import logging
 _logger = logging.getLogger(__name__)
 
-class Honorarios(models.Model):
-    _name = 'account.move.book.honorarios'
 
-    tipo_libro = fields.Selection([
+class Fees(models.Model):
+    _name = 'account.move.book.fees'
+
+    tipo_report = fields.Selection([
                 ('ANUAL','Anual'),
                 ('MENSUAL','Mensual'),
                 ],
@@ -44,7 +45,7 @@ class Honorarios(models.Model):
     move_ids = fields.Many2many('account.move',
         readonly=True,
         states={'draft': [('readonly', False)]})
-    impuestos = fields.One2many('account.move.book.honorarios.tax',
+    taxes = fields.One2many('account.move.book.fees.tax',
         'book_id',
         string="Detalle Impuestos")
 
@@ -53,9 +54,9 @@ class Honorarios(models.Model):
         'fiscal_period': datetime.now().strftime('%Y-%m'),
     }
 
-    @api.onchange('fiscal_period','tipo_libro')
+    @api.onchange('fiscal_period','tipo_report')
     def _setName(self):
-        self.name = self.tipo_libro
+        self.name = self.tipo_report
         if self.fiscal_period:
             self.name += " " + self.fiscal_period
 
@@ -93,21 +94,22 @@ class Honorarios(models.Model):
                         imp[l.tax_ids[0].id] = {'tax_id':l.tax_ids[0].id, 'credit':0 , 'debit': 0,}
                     imp[l.tax_ids[0].id]['credit'] += l.credit
                     imp[l.tax_ids[0].id]['debit'] += l.debit
-        if self.impuestos and isinstance(self.id, int):
+        if self.taxes and isinstance(self.id, int):
             self._cr.execute("DELETE FROM account_move_book_tax WHERE book_id=%s", (self.id,))
             self.invalidate_cache()
         lines = [[5,],]
         for key, i in imp.items():
             i['currency_id'] = self.env.user.company_id.currency_id.id
             lines.append([0,0, i])
-        self.impuestos = lines
+        self.taxes = lines
 
     @api.multi
-    def validar_libro(self):
+    def validar_report(self):
         return self.write({'state': 'done'})
 
-class ImpuestosLibro(models.Model):
-    _name="account.move.book.honorarios.tax"
+
+class TaxBook(models.Model):
+    _name="account.move.book.fees.tax"
 
     def get_monto(self):
         for t in self:
@@ -122,4 +124,4 @@ class ImpuestosLibro(models.Model):
         default=lambda self: self.env.user.company_id.currency_id,
         required=True,
         track_visibility='always')
-    book_id = fields.Many2one('account.move.book.honorarios', string="Libro")
+    book_id = fields.Many2one('account.move.book.fees', string="Libro")

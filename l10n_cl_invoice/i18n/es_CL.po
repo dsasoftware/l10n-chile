@@ -1216,7 +1216,7 @@ msgid ""
 "                              credit note directly or keep it draft,\n"
 "                              waiting for the document to be issued by\n"
 "                              your supplier/customer."
-msgstr "Ut. podrá validar y editar esta nota de crédito directamente o mantenerla en borrador, esperando que el documento sea enviado por su proveedor/cliente."
+msgstr "Ut. podrá validate y editar esta nota de crédito directamente o mantenerla en borrador, esperando que el documento sea enviado por su proveedor/cliente."
 
 #. module: l10n_cl_invoice
 #: code:addons/l10n_cl_invoice/wizard/journal_config_wizard.py:69
