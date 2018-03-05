@@ -12,10 +12,10 @@ class Fees(models.Model):
 
     tipo_report = fields.Selection([
                 ('ANUAL','Anual'),
-                ('MENSUAL','Mensual'),
+                ('monthly','Mensual'),
                 ],
                 string="Tipo de Libro",
-                default='MENSUAL',
+                default='monthly',
                 required=True,
                 readonly=True,
                 states={'draft': [('readonly', False)]}

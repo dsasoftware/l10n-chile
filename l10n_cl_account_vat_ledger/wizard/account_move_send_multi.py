@@ -24,25 +24,15 @@ class SendDteMulti(models.TransientModel):
 
     @api.multi
     def confirm(self):
-        #invs = self.env['account.move']
-        #active_ids = []
-        #for orden in ordenes:
-        #    id, value =orden.split(':')
-        #    id = int(id)
-        #    inv = invs.browse(id)
-        #    inv.write({'sii_batch_number':value})
-        #    active_ids.extend([id])
-        #raise UserError("%s %s" %(self._context.get('active_ids'), self.move_ids))
-        data ={
+        data = {
                 'move_ids': self.move_ids,
-                'tipo_report': 'ESPECIAL',
+                'tipo_report': 'special',
                 'tipo_operacion': 'purchase',
-                'tipo_envio': 'TOTAL',
+                'tipo_envio': 'total',
                 'folio_notificacion': 612124,
                 'fiscal_period': '2016-07',
-                'company_id':self.company_id.id,
-            }
-        libro = self.env['account.move.libro'].create(data)
+                'company_id':self.company_id.id, }
+        libro = self.env['account.move.ledger'].create(data)
         libro.write(data)
         libro.do_dte_send_report()
-        #return UserError("Enviado")
+

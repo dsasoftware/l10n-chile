@@ -2,6 +2,8 @@
 from odoo import fields, models, api, _
 from odoo.exceptions import UserError
 from datetime import datetime, timedelta
+import datetime as dtm
+import calendar
 import logging
 import json
 import collections
@@ -82,6 +84,7 @@ tag_round = pysiidte.tag_replace_2
 all_tags = tag_round + tag_replace01 + tag_replace_1 + tag_replace02 + \
            tag_replace_2
 
+
 def to_json(colnames, rows):
     all_data = []
     for row in rows:
@@ -113,6 +116,24 @@ def db_handler(method):
 
 class AccountMoveBook(models.Model):
     _name = "account.move.book"
+
+    @staticmethod
+    def add_months(sourcedate, months):
+        month = sourcedate.month - 1 + months
+        year = sourcedate.year + month // 12
+        month = month % 12 + 1
+        day = min(sourcedate.day, calendar.monthrange(year, month)[1])
+        return dtm.date(year, month, day)
+
+    @staticmethod
+    def first_period_day(period):
+        return period + '-01'
+
+    def first_next_period_day(self, period):
+        strdate = self.first_period_day(period)
+        date = dtm.datetime.strptime(strdate, '%Y-%m-%d')
+        strdate = self.add_months(date, 1)
+        return strdate
 
     sii_receipt = fields.Text(
         string='SII Message',
@@ -152,23 +173,20 @@ generated. Its in open status till user does not pay invoice.\n
  journal entries may or may not be reconciled.\n
 * The 'Cancelled' status is used when user cancel invoice.""")
     journal_ids = fields.Many2many(
-        'account.journal', readonly=True,
+        'account.journal', readonly=True, string='Journals',
         states={'draft': [('readonly', False)], })
     move_ids = fields.Many2many(
-        'account.move', readonly=True, states={'draft': [('readonly', False)]})
+        'account.move', readonly=True, string="Account Moves",
+        states={'draft': [('readonly', False)]})
     invoice_ids = fields.Many2many(
-        'account.invoice', readonly=True,
+        'account.invoice', readonly=True, string="Invoices",
         states={'draft': [('readonly', False)]})
 
     report_type = fields.Selection([
-                ('ESPECIAL', 'Especial'),
-                ('MENSUAL', 'Mensual'),
-                ('RECTIFICA', 'Rectifica'),
-                ],
-                string="Tipo de Libro",
-                default='MENSUAL',
-                required=True,
-                readonly=True,
+                ('special', 'Especial'),
+                ('monthly', 'Mensual'),
+                ('amendment', 'Rectifica'), ], string="Book Type",
+                default='monthly', required=True, readonly=True,
                 states={'draft': [('readonly', False)]},
                 help=u"""Mensual: corresponde a libros regulares.
 Especial: corresponde a un libro solicitado vía una notificación.
@@ -185,58 +203,58 @@ requiere un Código de Autorización de Reemplazo de Libro Electrónico.""")
             )
     include_receipts = fields.Boolean('Include Receipts', default=True)
     sending_type = fields.Selection([
-        ('AJUSTE', 'Ajuste'), ('PARCIAL', 'Parcial'), ('TOTAL', 'Total'), ],
+        ('adjustment', 'Ajuste'), ('partial', 'Parcial'), ('total', 'Total'), ],
         string="Tipo de Envío",
-        default="TOTAL", required=True, readonly=True,
+        default="total", required=True, readonly=True,
         states={'draft': [('readonly', False)], })
     notification_number = fields.Char(
-        string="Folio de Notificación", readonly=True,
+        string="Notification invoice number", readonly=True,
         states={'draft': [('readonly', False)], })
     taxes = fields.One2many(
-        'account.move.book.tax', 'book_id', string="Detalle Impuestos")
+        'account.move.book.tax', 'book_id', string="Tax Detail")
     currency_id = fields.Many2one(
-        'res.currency', string='Moneda',
+        'res.currency', string='Currency',
         default=lambda self: self.env.user.company_id.currency_id,
         required=True, track_visibility='always')
     total_vat_affected = fields.Monetary(
-        string="Total Afecto", readonly=True, compute="set_values",
+        string="Total VAT Affected", readonly=True, compute="set_values",
         store=True)
     total_exempt = fields.Monetary(
-        string="Total Exento", readonly=True, compute='set_values', store=True)
+        string="Total Exempt", readonly=True, compute='set_values', store=True)
     total_vat = fields.Monetary(
-        string="Total IVA", readonly=True, compute='set_values',
+        string="Total VAT", readonly=True, compute='set_values',
         store=True)
     total_other_taxes = fields.Monetary(
-        string="Total Otros Impuestos", readonly=True, compute='set_values',
+        string="Total Other Taxes", readonly=True, compute='set_values',
         store=True)
     total = fields.Monetary(
-        string="Total Otros Impuestos", readonly=True, compute='set_values',
+        string="Total", readonly=True, compute='set_values',
         store=True)
     fiscal_period = fields.Char(
-        string='Periodo Tributario', required=True, readonly=True,
+        string='Fiscal Period', required=True, readonly=True,
         default=lambda x: datetime.now().strftime('%Y-%m'),
         states={'draft': [('readonly', False)], })
     company_id = fields.Many2one(
-        'res.company', string="Compañía", required=True,
+        'res.company', string="Company", required=True,
         default=lambda self: self.env.user.company_id.id, readonly=True,
         states={'draft': [('readonly', False)], })
     name = fields.Char(
-        string="Detalle", required=True, readonly=True,
+        string="Detail", required=True, readonly=True,
         states={'draft': [('readonly', False)], })
     proportion_factor = fields.Float(
-        string="Factor proporcionalidad", readonly=True,
+        string="Proportion Factor", readonly=True,
         states={'draft': [('readonly', False)], })
     nro_segmento = fields.Integer(
         string="Número de Segmento", readonly=True,
         states={'draft': [('readonly', False)], },
-        help=u"""Sólo si el TIPO DE ENVIO es PARCIAL.""")
+        help=u"""Sólo si el TIPO DE ENVIO es partial.""")
     date = fields.Date(
-        string="Fecha", required=True, readonly=True,
+        string="Date", required=True, readonly=True,
         default=lambda x: datetime.now(),
         states={'draft': [('readonly', False)], })
     receipts = fields.One2many(
-        'account.move.book.receipts', 'book_id', string="receipts", readonly=True,
-        states={'draft': [('readonly', False)]})
+        'account.move.book.receipts', 'book_id', string="receipts",
+        readonly=True, states={'draft': [('readonly', False)]})
     amendment_code = fields.Char(string="Código de Rectificación")
 
     @staticmethod
@@ -382,11 +400,44 @@ order by ai.id, al.id, dcl.sii_code, at.id) a
         return a
 
     @db_handler
+    def _get_invoices_from_selected_journals(self):
+        period = self.fiscal_period
+        _logger.info(period)
+        journal_ids = [str(x.id) for x in self.journal_ids]
+        journals = ', '.join(journal_ids)
+        _logger.info(journals)
+        first_day = self.first_period_day(period)
+        _logger.info(first_day)
+        last_day = self.first_next_period_day(period)
+        _logger.info(last_day)
+        a = """select 
+ai.id
+from account_invoice ai join account_move am
+on ai.move_id = am.id
+where ai.journal_id in (%s) and ai.state in ('open', 'paid') 
+and am.state = 'posted'
+and am.date >= '%s' and am.date < '%s'
+""" % (str(journals), str(first_day), str(last_day))
+        _logger.info(str(a))
+        return a
+
+    @db_handler
     def _summary_by_period(self):
+        if len(self.invoice_ids) > 0:
+            invoice_ids = self.invoice_ids
+        else:
+            invoice_ids = [
+                x['id'] for x in self._get_invoices_from_selected_journals()]
+            _logger.info(invoice_ids)
+            if not invoice_ids and self.journal_ids:
+                raise UserError('No invoices found in selected journals')
+            _logger.info(invoice_ids)
         try:
-            account_invoice_ids = [str(x.id) for x in self.invoice_ids]
+            account_invoice_ids = [str(x.id) for x in invoice_ids]
         except:
             return False
+        _logger.info(account_invoice_ids)
+        raise UserError('check aii')
         a = """
 select
 "TpoDoc"
@@ -483,7 +534,8 @@ group by "TpoDoc", "NroDoc",
 order by "TpoDoc", "NroDoc") b
 group by
 "TpoDoc"
-""" % (self.proportion_factor, self.line_tax_view(), ', '.join(account_invoice_ids))
+""" % (self.proportion_factor, self.line_tax_view(), ', '.join(
+            account_invoice_ids))
         # raise UserError(a)
         return a
 
@@ -596,10 +648,11 @@ xsi:schemaLocation="http://www.sii.cl/SiiDte LibroCV_v10.xsd" version="1.0">\
                 ['CodImp', 'TotMntImp'])
             xml_detail1 = self.replace_tags(self.replace_tags(
                 self.replace_tags(
-                dicttoxml.dicttoxml(
-                    dict1n, root=False, attr_type=False).replace(
-                    'item', 'TotalesPeriodo').replace('>0.0<', '>0<').replace(
-                    '.0<', '<'), tag_replace01, '0'), tag_replace_1, ''),
+                    dicttoxml.dicttoxml(
+                        dict1n, root=False, attr_type=False).replace(
+                            'item', 'TotalesPeriodo').replace(
+                        '>0.0<', '>0<').replace(
+                        '.0<', '<'), tag_replace01, '0'), tag_replace_1, ''),
                     tag_replace01, '0.0')
             dict2n = self.insert_son_values(
                 dict2, 'Detalles', 'IVANoRec', ['CodIVANoRec', 'MntIVANoRec'])
@@ -667,11 +720,12 @@ guardada del xml es la siguiente: {}'.format(xml_pret))
             _logger.info(xml_pret)
             return xml_pret
         else:  # except:
-            _logger.info('no se pudo obtener archivos (primer pasada)')
+            _logger.info('Could not get files (first attempt)')
             return False
 
     @api.depends('name', 'date', 'company_id', 'invoice_ids', 'fiscal_period',
-                 'operation_type', 'report_type', 'sending_type', 'proportion_factor')
+                 'operation_type', 'report_type', 'sending_type',
+                 'proportion_factor')
     def set_values(self):
         if not self.name and not self.invoice_ids:
             return
@@ -719,7 +773,7 @@ SII, intente en 5s más")}}
         if resp['SII:RESPUESTA']['SII:RESP_HDR']['ESTADO'] == "EPR":
             self.state = "Proceso"
             if 'SII:RESP_BODY' in resp['SII:RESPUESTA'] and resp[
-                'SII:RESPUESTA']['SII:RESP_BODY']['RECHAZADOS'] == "1":
+                    'SII:RESPUESTA']['SII:RESP_BODY']['RECHAZADOS'] == "1":
                 self.sii_result = "Rechazado"
         elif resp['SII:RESPUESTA']['SII:RESP_HDR']['ESTADO'] == "RCT":
             self.state = "Rechazado"
@@ -728,7 +782,6 @@ SII, intente en 5s más")}}
                     'title': _('Error RCT'),
                     'message': _(resp['SII:RESPUESTA']['GLOSA'])}}
         return status
-
 
     @api.multi
     def ask_for_dte_status(self):
@@ -740,7 +793,7 @@ SII, intente en 5s más")}}
                 self.company_id.dte_service_provider, signature_d['priv_key'],
                 signature_d['cert'])
         else:  # except:
-            raise UserError('Error de conexion')
+            raise UserError('Connection error')
         xml_response = xmltodict.parse(self.sii_xml_response)
         _logger.info(xml_response)
         if self.state == 'Enviado':
@@ -750,47 +803,36 @@ SII, intente en 5s más")}}
                 return status
 
 
-class receipts(models.Model):
+class Receipts(models.Model):
     _name = 'account.move.book.receipts'
 
-    currency_id = fields.Many2one('res.currency',
-        string='Moneda',
+    currency_id = fields.Many2one(
+        'res.currency', string='Currency',
         default=lambda self: self.env.user.company_id.currency_id,
-        required=True,
-        track_visibility='always')
-    receipt_type = fields.Many2one('sii.document_class',
-        string="Tipo de receipt",
-        required=True,
-        domain=[('document_letter_id.name','in',['B','M'])])
+        required=True, track_visibility='always')
+    receipt_type = fields.Many2one(
+        'sii.document_class', string="Receipt Type",
+        required=True, domain=[('document_letter_id.name', 'in', ['B', 'M'])])
     initial_range = fields.Integer(
-        string="Rango Inicial",
-        required=True)
+        string="Initial Range", required=True)
     final_range = fields.Integer(
-        string="Rango Final",
-        required=True)
+        string="Final Range", required=True)
     quantity_receipts = fields.Integer(
-        string="Cantidad receipts",
-        rqquired=True)
-    net_amount = fields.Monetary(
-        string="Monto Neto",
-        required=True)
-    tax = fields.Many2one('account.tax',
-        string="Impuesto",
-        required=True,
+        string="Cantidad receipts", required=True)
+    net_amount = fields.Monetary(string="Net Amount", required=True)
+    tax = fields.Many2one(
+        'account.tax', string="Tax", required=True,
         domain=[('type_tax_use', '!=', 'none'), '|', ('active', '=', False),
                 ('active', '=', True)])
     amount_tax = fields.Monetary(
-        compute='_amount_total',
-        string="Monto Impuesto",
-        required=True)
+        compute='_amount_total', string="Tax Amount", required=True)
     amount_total = fields.Monetary(
-        compute='_amount_total',
-        string="Monto Total",
-        required=True)
+        compute='_amount_total', string="Total Amount", required=True)
     book_id = fields.Many2one('account.move.book')
 
-class ImpuestosLibro(models.Model):
-    _name="account.move.book.tax"
+
+class BookTaxes(models.Model):
+    _name = "account.move.book.tax"
 
     def get_monto(self):
         for t in self:
@@ -798,15 +840,12 @@ class ImpuestosLibro(models.Model):
             if t.book_id.operation_type in ['sale']:
                 t.amount = t.credit - t.debit
 
-    tax_id = fields.Many2one('account.tax', string="Impuesto")
+    tax_id = fields.Many2one('account.tax', string="Tax")
     credit = fields.Monetary(string="Créditos", default=0.00)
     debit = fields.Monetary(string="Débitos", default=0.00)
-    amount = fields.Monetary(
-        compute="get_monto",
-        string="Monto")
-    currency_id = fields.Many2one('res.currency',
-        string='Moneda',
+    amount = fields.Monetary(compute="get_monto", string="Amount")
+    currency_id = fields.Many2one(
+        'res.currency', string='Currency',
         default=lambda self: self.env.user.company_id.currency_id,
-        required=True,
-        track_visibility='always')
-    book_id = fields.Many2one('account.move.book', string="Libro")
+        required=True, track_visibility='always')
+    book_id = fields.Many2one('account.move.book', string="Book")
