@@ -423,21 +423,35 @@ and am.date >= '%s' and am.date < '%s'
 
     @db_handler
     def _summary_by_period(self):
-        if len(self.invoice_ids) > 0:
-            invoice_ids = self.invoice_ids
-        else:
-            invoice_ids = [
-                x['id'] for x in self._get_invoices_from_selected_journals()]
-            _logger.info(invoice_ids)
-            if not invoice_ids and self.journal_ids:
-                raise UserError('No invoices found in selected journals')
-            _logger.info(invoice_ids)
-        try:
-            account_invoice_ids = [str(x.id) for x in invoice_ids]
-        except:
+        # better explicit than implicit ....
+        if len(self.invoice_ids) == 0 and len(self.journal_ids) == 0:
+            # first stage.. there are neither invoices nor journals
             return False
-        _logger.info(account_invoice_ids)
-        raise UserError('check aii')
+        elif len(self.invoice_ids) == 0 and len(self.journal_ids) != 0:
+            # second stage .. journal is selected but invoices not found yet
+            invoice_journal_ids = self._get_invoices_from_selected_journals()
+            if len(invoice_journal_ids) == 0:
+                # there are not invoices in journal. There is no possible
+                # sale or purchase report in this situation
+                raise UserError('No invoices found in selected journals')
+            else:
+                # some kind of invoice has been found (can't be??)
+                account_invoice_ids = [
+                    str(x['id']) for x in invoice_journal_ids]
+                _logger.info(account_invoice_ids)
+                # Inject invoice_ids in model
+                values = [(6, 0, [x['id'] for x in invoice_journal_ids])]
+                self.write({
+                    'invoice_ids': values
+                })
+        elif len(self.invoice_ids) != 0 and len(self.journal_ids) == 0:
+            # there is a selection of invoices without journal (can't be)
+            raise UserError('No journal found for selected invoices')
+        elif len(self.invoice_ids) != 0 and len(self.journal_ids) != 0:
+            # there is a previous selection of invoices an journals.
+            # may be a second time of entering a draft ledger, and need to
+            # make calculations.
+            raise UserError('previous selection')
         a = """
 select
 "TpoDoc"
@@ -543,6 +557,7 @@ group by
     def _detail_by_period(self):
         if True:  # try:
             account_invoice_ids = [str(x.id) for x in self.invoice_ids]
+            # raise UserError('jfjfjfjf %s' % account_invoice_ids)
         else:  # except:
             return False
         a = """
