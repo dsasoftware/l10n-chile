@@ -18,7 +18,7 @@ implementación
     'author': 'Blanco Martin & Asociados - Nelson Ramírez Sánchez',
     'website': 'http://www.bmya.cl',
     'category': 'Localization',
-    'depends': ['account'],
+    'depends': ['account', 'account_tax_python'],
     'data': [
         'data/l10n_cl_chart_tags.xml',
         'data/l10n_cl_chart_data.xml',
