@@ -15,7 +15,7 @@ Chile, con algunas cuentas agregadas en base a experiencias de
 implementación
 
     """,
-    'author': 'Blanco Martin & Asociados - Nelson Ramírez Sánchez',
+    'author': 'Blanco Martin & Asociados',
     'website': 'http://www.bmya.cl',
     'category': 'Localization',
     'depends': ['account'],
