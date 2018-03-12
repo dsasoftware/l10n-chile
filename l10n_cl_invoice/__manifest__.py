@@ -46,7 +46,7 @@
         'data/partner.xml',
         'data/country.xml',
         'data/sii.concept_type.csv',
-        #'data/account.fiscal.position.csv',
+        'data/account.fiscal.position.csv',
         'views/partner_view.xml',
         'views/company_view.xml',
         'views/country_view.xml',
@@ -69,7 +69,5 @@
         'security/ir.model.access.csv',
         'security/l10n_cl_invoice_security.xml',
         'data/res.currency.csv',
-        'data/tax.xml',
-        #'views/sii_menuitem.xml',
-    ]    
+    ]
 }
