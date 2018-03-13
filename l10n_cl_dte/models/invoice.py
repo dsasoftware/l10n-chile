@@ -928,7 +928,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
             folio = self.sii_document_number
         return int(folio)
 
-    def get_folioget_digital_signature(self):
+    def get_folio(self):
         """
         Funcion para descargar el folio tomando el valor desde la secuencia
         correspondiente al tipo de documento.
