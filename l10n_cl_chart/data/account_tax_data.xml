@@ -180,7 +180,6 @@
             <field name="no_rec">True</field>
             <field name="description">ILA A 10</field>
             <field name="tag_ids">l10n_cl_chart.tag_cl_04</field>
-            <field name="tax_group_id">account.tax_group_taxes</field>
             <field name="amount">10.0</field>
             <field name="price_include">False</field>
             <field name="name">Beb. Analcólicas 10%</field>
@@ -201,7 +200,6 @@
             <field name="no_rec">True</field>
             <field name="description">ILA A 18</field>
             <field name="tag_ids">l10n_cl_chart.tag_cl_04</field>
-            <field name="tax_group_id">account.tax_group_taxes</field>
             <field name="amount">18.0</field>
             <field name="price_include">False</field>
             <field name="name">Beb. Analcólicas 18%</field>
@@ -222,7 +220,6 @@
             <field name="no_rec">True</field>
             <field name="description">ILA L 31.5</field>
             <field name="tag_ids">l10n_cl_chart.tag_cl_04</field>
-            <field name="tax_group_id">account.tax_group_taxes</field>
             <field name="amount">31.5</field>
             <field name="price_include">False</field>
             <field name="name">Licores 31.5%</field>
@@ -243,7 +240,6 @@
             <field name="no_rec">True</field>
             <field name="description">ILA V 20.5</field>
             <field name="tag_ids">l10n_cl_chart.tag_cl_04</field>
-            <field name="tax_group_id">account.tax_group_taxes</field>
             <field name="amount">20.5</field>
             <field name="price_include">False</field>
             <field name="name">Vinos</field>
