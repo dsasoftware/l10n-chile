@@ -8,11 +8,17 @@ import collections
 import hashlib
 import json
 import logging
+_logger = logging.getLogger(__name__)
+
 import os
 import textwrap
 from datetime import datetime, timedelta
 
-import cchardet
+try:
+    import cchardet
+except:
+    _logger.info('No module name cchardet')
+
 import dicttoxml
 import M2Crypto
 import pysiidte
@@ -33,7 +39,6 @@ try:
     urllib3.disable_warnings()
 except:
     pass
-_logger = logging.getLogger(__name__)
 try:
     from cStringIO import StringIO
 except:
