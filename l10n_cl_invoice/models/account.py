@@ -327,7 +327,7 @@ class AccountJournal(models.Model):
             help="Use own sequence or invoice sequence on Debit and Credit \
                  Notes?")
     journal_activities_ids = fields.Many2many(
-            'partner.activities',id1='journal_id', id2='activities_id',
+            'partner.activities', id1='journal_id', id2='activities_id',
             string='Journal Turns', help="""Select the turns you want to \
             invoice in this Journal""")
     excempt_documents = fields.Boolean(
