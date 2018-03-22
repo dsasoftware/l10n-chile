@@ -1064,7 +1064,7 @@ del CAF encontrado (desde {} hasta {}).'''.format(
             emisor['Actecos'] = self._giros_sender()
         if self.journal_id.sii_code:
             emisor['Sucursal'] = self.normalize_string(
-                self.journal_id.sucursal.name, 'Sucursal', 'truncate')
+                self.journal_id.sucursal_id.name, 'Sucursal', 'truncate')
             emisor['CdgSIISucur'] = self.normalize_string(
                 self.journal_id.sii_code or '', 'CdgSIISucur', 'truncate')
         emisor['DirOrigen'] = self.normalize_string('{} {}'.format(
