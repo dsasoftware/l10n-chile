@@ -857,7 +857,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
                 [("authorized_users_ids", "=", user.id)])
             if not obj or not obj.cert:
                 obj = self.env['res.company'].browse([comp_id.id])
-                if not obj.cert or not user.id in obj.authorized_users_ids.ids:
+                if not obj.cert or user.id not in obj.authorized_users_ids.ids:
                     return False
         signature_data = {
             'subject_name': obj.name,
@@ -879,7 +879,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
                 [("authorized_users_ids", "=", user.id)])
             if not obj or not obj.cert:
                 obj = self.env['res.company'].browse([comp_id.id])
-                if not obj.cert or not user.id in obj.authorized_users_ids.ids:
+                if not obj.cert or user.id not in obj.authorized_users_ids.ids:
                     return False
         signature_data = {
             'subject_name': obj.name,
@@ -969,25 +969,25 @@ for this Document. Please enable one.'''))
                 post = xmltodict.parse(post.replace(
                     '<?xml version="1.0"?>', '', 1))
                 doc_type = post['AUTORIZACION']['CAF']['DA']['TD']
-                folio_inicial = post['AUTORIZACION']['CAF']['DA']['RNG']['D']
-                folio_final = post['AUTORIZACION']['CAF']['DA']['RNG']['H']
+                begin_number = post['AUTORIZACION']['CAF']['DA']['RNG']['D']
+                end_number = post['AUTORIZACION']['CAF']['DA']['RNG']['H']
                 if int(self.sii_document_class_id.sii_code) != int(doc_type):
                     raise UserError('''El tipo de documento del caf {} no es \
 igual al tipo de documento realizado {}'''.format(
                         doc_type, self.sii_document_class_id.sii_code))
-                if folio in range(int(folio_inicial), (int(folio_final) + 1)):
+                if folio in range(int(begin_number), (int(end_number) + 1)):
                     return post
-            if folio > int(folio_final):
+            if folio > int(end_number):
                 msg = '''El folio de este documento: {} está fuera de rango \
 del CAF vigente (desde {} hasta {}). Solicite un nuevo CAF en el sitio \
-www.sii.cl'''.format(folio, folio_inicial, folio_final)
+www.sii.cl'''.format(folio, begin_number, end_number)
                 # defino el status como "spent"
                 caffile.status = 'spent'
                 raise UserError(_(msg))
-            elif folio < int(folio_inicial):
+            elif folio < int(begin_number):
                 msg = '''El folio de este documento: {} es anterior al rango
 del CAF encontrado (desde {} hasta {}).'''.format(
-                    folio, folio_inicial, folio_final)
+                    folio, begin_number, end_number)
                 raise UserError(_(msg))
         return False
 
@@ -1112,7 +1112,8 @@ del CAF encontrado (desde {} hasta {}).'''.format(
             self.partner_id.city, 'CiudadRecep', 'safe')
         return receptor
 
-    def _discounts(self, global_amounts):
+    @staticmethod
+    def _discounts(global_amounts):
         _logger.info(json.dumps(global_amounts))
         discount_types = [
             ('dcglobalaf', 'mntneto'),
@@ -1144,7 +1145,6 @@ realizar en su documento.""")
             discount['DscRcgGlobal']['IndExeDR'] = i
             j += 1
             discounts.append(discount)
-        # raise UserError(json.dumps(discounts))
         return discounts
 
     def _totals(self, MntExe=0, no_product=False, tax_include=False,
@@ -1497,13 +1497,13 @@ del servidor. Se toma el varlor preexistente en el mensaje')
                     self.sii_result = 'Reparo'
                 elif resp['SII:RESPUESTA']['SII:RESP_HDR']['ESTADO'] == 'EPR':
                     if resp['SII:RESPUESTA']['SII:RESP_BODY'][
-                        'ACEPTADOS'] == '1':
+                            'ACEPTADOS'] == '1':
                         self.sii_result = 'Aceptado'
                     if resp['SII:RESPUESTA']['SII:RESP_BODY'][
-                        'REPARO'] == '1':
+                            'REPARO'] == '1':
                         self.sii_result = 'Reparo'
                     if resp['SII:RESPUESTA']['SII:RESP_BODY'][
-                        'RECHAZADOS'] == '1':
+                            'RECHAZADOS'] == '1':
                         self.sii_result = 'Rechazado'
             else:  # except:
                 raise UserError('_get_dte_status: no se pudo obtener una \
@@ -1609,17 +1609,16 @@ respuesta satisfactoria por conexión ni de respuesta previa.')
 
     def get_pdf_docsonline(self, file_upload):
         host = 'https://www.documentosonline.cl'
-        headers = {}
-        headers['Accept'] = u'*/*'
-        headers['Accept-Encoding'] = u'gzip, deflate, compress'
-        headers['Connection'] = u'close'
-        headers[
-            'Content-Type'] = u'multipart/form-data; \
-boundary=33b4531a79be4b278de5f5688fab7701'
-        headers[
-            'User-Agent'] = u'python-requests/2.2.1 CPython/2.7.6 Darwin/13.2.0'
-        r = requests.post(host + '/dte/hgen/token',
-                          files=dict(file_upload=file_upload))
+        headers = {
+            'Accept': u'*/*',
+            'Accept-Encoding': u'gzip, deflate, compress',
+            'Connection': u'close',
+            'Content-Type': u'multipart/form-data;\
+boundary=33b4531a79be4b278de5f5688fab7701',
+            'User-Agent': u'python-requests/2.2.1 CPython/2.7.6 Darwin/13.2.0', 
+        }
+        r = requests.post(
+            host + '/dte/hgen/token', files=dict(file_upload=file_upload))
         print r
         print r.text
         if r.status_code == 200:
@@ -1663,7 +1662,7 @@ dte/hgen/html/{}'.format(json.loads(r.text)['token'])
     def send_to_recipient(self):
         _logger.info('################3333333333333333333')
         _logger.info(self._context)
-        raise UserError('kdkdkdkd')
+        # raise UserError('kdkdkdkd')
         # hice esta funcion para invocar desde un botón ambos metodos
         self.send_envelope_recipient(
             RUTEmisor, resol_data, documentos, signature_d, SubTotDTE,
@@ -1765,8 +1764,7 @@ hacer eso en un envío')
         # raise UserError(documentos)
         envelope = False
         if not is_doc_type_b:
-            envelope = self.send_envelope_sii
-            (
+            envelope = self.send_envelope_sii(
                 RUTEmisor, resol_data, documentos, signature_d, SubTotDTE,
                 file_name, company_id, certp)
             _logger.info('do_dte_send - envelope: %s' % envelope)
@@ -2070,7 +2068,7 @@ hacer eso en un envío')
         ted = (
             '''<TED version="1.0">{}<FRMT algoritmo="SHA1withRSA">{}\
 </FRMT></TED>''').format(ddxml, frmt)
-        root = etree.XML(ted)
+        # root = etree.XML(ted)
         self.sii_barcode = ted
         if ted:
             barcodefile = StringIO()
