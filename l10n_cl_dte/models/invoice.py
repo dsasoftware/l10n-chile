@@ -7,18 +7,8 @@ import base64
 import collections
 import hashlib
 import json
-import logging
-_logger = logging.getLogger(__name__)
-
 import os
 import textwrap
-from datetime import datetime, timedelta
-
-try:
-    import cchardet
-except:
-    _logger.info('No module name cchardet')
-
 import dicttoxml
 import M2Crypto
 import pysiidte
@@ -26,25 +16,34 @@ import pytz
 import requests
 import urllib3
 import xmltodict
+from datetime import *
 from elaphe import barcode
 from lxml import etree
 from lxml.etree import Element, SubElement
 from signxml import XMLSigner, methods
 from SOAPpy import SOAPProxy
-
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+from OpenSSL.crypto import *
+import logging
+
+_logger = logging.getLogger(__name__)
+
+try:
+    import cchardet
+except ImportError:
+    _logger.info('No module name cchardet')
 
 try:
     urllib3.disable_warnings()
-except:
+except ImportError:
     pass
 try:
     from cStringIO import StringIO
-except:
+except ImportError:
     from StringIO import StringIO
 
-from OpenSSL.crypto import *
+
 normalize_tags = pysiidte.normalize_tags
 pluralizeds = pysiidte.pluralizeds
 result = xmltodict.parse(pysiidte.stamp)
@@ -88,6 +87,7 @@ def db_query(method):
         _logger.info('colnames: {}'.format(colnames))
         _logger.info('rows: {}'.format(rows))
         return to_json(colnames, rows)
+
     return call
 
 
@@ -543,39 +543,40 @@ version="1.0">
                     validation_result['result'], validation_result['msg']))
 
 
-#        """
-#        Funcion para validar los xml generados contra el esquema que le
-#        corresponda segun el tipo de documento.
-#        @author: Daniel Blanco Martin (daniel[at]blancomartin.cl)
-#        @version: 2016-06-01. Se agregó validación para boletas
-#        Modificada por Daniel Santibañez 2016-08-01
-#        """
-#        if validacion == 'bol':
-#            return True
-#        validacion_type = {
-#            'doc': 'DTE_v10.xsd',
-#            'env': 'EnvioDTE_v10.xsd',
-#            'env_boleta': 'EnvioBOLETA_v11.xsd',
-#            'recep': 'Recibos_v10.xsd',
-#            'env_recep': 'EnvioRecibos_v10.xsd',
-#            'env_resp': 'RespuestaEnvioDTE_v10.xsd',
-#            'sig': 'xmldsignature_v10.xsd',
-#            'book': 'LibroCV_v10.xsd',
-#        }
-#        xsd_file = xsdpath + validacion_type[validacion]
-#        try:
-#            xmlschema_doc = etree.parse(xsd_file)
-#            xmlschema = etree.XMLSchema(xmlschema_doc)
-#            xml_doc = etree.fromstring(some_xml_string)
-#            result = xmlschema.validate(xml_doc)
-#            if not result:
-#                xmlschema.assert_(xml_doc)
-#            return result
-#        except AssertionError as e:
-#            _logger.info(etree.tostring(xml_doc))
-#            raise UserError(
-#                _(u'Error de formación del XML: {} - Validación: {}').format(
-#                    e.args, validacion))
+        #        """
+        #        Funcion para validar los xml generados contra el esquema que le
+        #        corresponda segun el tipo de documento.
+        #        @author: Daniel Blanco Martin (daniel[at]blancomartin.cl)
+        #        @version: 2016-06-01. Se agregó validación para boletas
+        #        Modificada por Daniel Santibañez 2016-08-01
+        #        """
+        #        if validacion == 'bol':
+        #            return True
+        #        validacion_type = {
+        #            'doc': 'DTE_v10.xsd',
+        #            'env': 'EnvioDTE_v10.xsd',
+        #            'env_boleta': 'EnvioBOLETA_v11.xsd',
+        #            'recep': 'Recibos_v10.xsd',
+        #            'env_recep': 'EnvioRecibos_v10.xsd',
+        #            'env_resp': 'RespuestaEnvioDTE_v10.xsd',
+        #            'sig': 'xmldsignature_v10.xsd',
+        #            'book': 'LibroCV_v10.xsd',
+        #        }
+        #        xsd_file = xsdpath + validacion_type[validacion]
+        #        try:
+        #            xmlschema_doc = etree.parse(xsd_file)
+        #            xmlschema = etree.XMLSchema(xmlschema_doc)
+        #            xml_doc = etree.fromstring(some_xml_string)
+        #            result = xmlschema.validate(xml_doc)
+        #            if not result:
+        #                xmlschema.assert_(xml_doc)
+        #            return result
+        #        except AssertionError as e:
+        #            _logger.info(etree.tostring(xml_doc))
+        #            raise UserError(
+        #                _(u'Error de formación del XML: {} - Validación: {
+            # }').format(
+        #                    e.args, validacion))
 
     def send_xml_file(self, envio_dte=None, file_name="envio", company_id=False,
                       sii_result='NoEnviado', doc_ids=''):
@@ -618,7 +619,8 @@ YComp 5.0.2.4)',
         headers.update({'Content-Length': '{}'.format(len(multi[0]))})
         response = pool.request_encode_body(
             'POST', url + post, params, headers)
-        _logger.info('este es response ---------------- {}'.format(response.data))
+        _logger.info(
+            'este es response ---------------- {}'.format(response.data))
         retorno = {
             'sii_xml_response': response.data,
             'sii_result': 'NoEnviado',
@@ -626,7 +628,8 @@ YComp 5.0.2.4)',
         if response.status != 200:
             return retorno
         respuesta_dict = xmltodict.parse(response.data)
-        _logger.info('este es respuesta_dict---------------- {}'.format(respuesta_dict))
+        _logger.info(
+            'este es respuesta_dict---------------- {}'.format(respuesta_dict))
         if respuesta_dict['RECEPCIONDTE']['STATUS'] != '0':
             _logger.info(
                 connection_status[respuesta_dict['RECEPCIONDTE']['STATUS']])
@@ -911,11 +914,11 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
          @author: Daniel Blanco Martin (daniel[at]blancomartin.cl)
          @version: 2016-05-01
         """
-        filename = (self.document_number+'.xml').replace(' ','')
+        filename = (self.document_number + '.xml').replace(' ', '')
         return {
             'type': 'ir.actions.act_url',
             'url': '/web/binary/download_document?model=account.invoice\
-&field=sii_xml_request&id=%s&filename=%s' % (self.id,filename),
+&field=sii_xml_request&id=%s&filename=%s' % (self.id, filename),
             'target': 'self', }
 
     def get_folio_current(self):
@@ -972,7 +975,7 @@ for this Document. Please enable one.'''))
                     raise UserError('''El tipo de documento del caf {} no es \
 igual al tipo de documento realizado {}'''.format(
                         doc_type, self.sii_document_class_id.sii_code))
-                if folio in range(int(folio_inicial), (int(folio_final)+1)):
+                if folio in range(int(folio_inicial), (int(folio_final) + 1)):
                     return post
             if folio > int(folio_final):
                 msg = '''El folio de este documento: {} está fuera de rango \
@@ -999,7 +1002,7 @@ del CAF encontrado (desde {} hasta {}).'''.format(
         :return:
         """
         # return self.sii_document_class_id.sii_code in [
-            # 35, 38, 39, 41, 70, 71]
+        # 35, 38, 39, 41, 70, 71]
         return self.sii_document_class_id.document_letter_id.name in ['B', 'M']
 
     def _giros_sender(self):
@@ -1029,8 +1032,8 @@ del CAF encontrado (desde {} hasta {}).'''.format(
             IdDoc['FmaPago'] = self.forma_pago or 1
         if not tax_include and self.is_doc_type_b():
             IdDoc['IndMntNeto'] = 2
-        #if self.is_doc_type_b():
-            #Servicios periódicos
+            # if self.is_doc_type_b():
+            # Servicios periódicos
         #    IdDoc['PeriodoDesde'] =
         #    IdDoc['PeriodoHasta'] =
         if not self.is_doc_type_b():
@@ -1132,7 +1135,7 @@ del CAF encontrado (desde {} hasta {}).'''.format(
             discount['DscRcgGlobal']['TpoValor'] = '%'
             try:
                 discount['DscRcgGlobal']['ValorDR'] = round(
-                    100 * abs(global_amounts[discount_types[i][0]])/float(
+                    100 * abs(global_amounts[discount_types[i][0]]) / float(
                         global_amounts[discount_types[i][1]]), 2)
             except ZeroDivisionError:
                 raise UserError(u"""Está aplicando un tipo de descuento exento \
@@ -1153,8 +1156,8 @@ realizar en su documento.""")
         # debe validar que el tipo de documento valido para estos casos debe
         # ser exenta
         if self.sii_document_class_id.sii_code == 34 or (
-                self.referencias and self.referencias[0].
-                sii_referencia_TpoDocRef.sii_code == '34'):
+                    self.referencias and self.referencias[0].
+                        sii_referencia_TpoDocRef.sii_code == '34'):
             self.mnt_exe = totals['MntExe'] = int(round(self.amount_total, 0))
             if no_product:
                 self.mnt_exe = totals['MntExe'] = 0
@@ -1197,9 +1200,11 @@ realizar en su documento.""")
 incorrecto para facturación exenta. Seleccione el documento adecuado.""")
         except KeyError:
             pass
-#             raise UserError(u"""Ud. esta aplicando un descuento exento sobre \
-# items afectos. Agregue el IVA al descuento o use un item Descuento que tenga \
-# iva.""")
+        #             raise UserError(u"""Ud. esta aplicando un descuento
+        # exento sobre \
+        # items afectos. Agregue el IVA al descuento o use un item Descuento
+        # que tenga \
+        # iva.""")
         return totals
 
     def _encabezado(self, MntExe=0, no_product=False, tax_include=False,
@@ -1492,13 +1497,13 @@ del servidor. Se toma el varlor preexistente en el mensaje')
                     self.sii_result = 'Reparo'
                 elif resp['SII:RESPUESTA']['SII:RESP_HDR']['ESTADO'] == 'EPR':
                     if resp['SII:RESPUESTA']['SII:RESP_BODY'][
-                    'ACEPTADOS'] == '1':
+                        'ACEPTADOS'] == '1':
                         self.sii_result = 'Aceptado'
                     if resp['SII:RESPUESTA']['SII:RESP_BODY'][
-                    'REPARO'] == '1':
+                        'REPARO'] == '1':
                         self.sii_result = 'Reparo'
                     if resp['SII:RESPUESTA']['SII:RESP_BODY'][
-                    'RECHAZADOS'] == '1':
+                        'RECHAZADOS'] == '1':
                         self.sii_result = 'Rechazado'
             else:  # except:
                 raise UserError('_get_dte_status: no se pudo obtener una \
@@ -1570,8 +1575,8 @@ respuesta satisfactoria por conexión ni de respuesta previa.')
         attachment_obj = self.env['ir.attachment']
         attachment_id = attachment_obj.search(
             [('name', 'ilike', filetype),
-            ('res_model', '=', self._name),
-            ('res_id', '=', self.id)])
+             ('res_model', '=', self._name),
+             ('res_id', '=', self.id)])
         return not attachment_id
 
     def send_envelope_recipient(
@@ -1581,7 +1586,8 @@ respuesta satisfactoria por conexión ni de respuesta previa.')
             dtes = self.create_template_envelope(
                 RUTEmisor, self.format_vat(self.partner_id.vat),
                 resol_data['dte_resolution_date'],
-                resol_data['dte_resolution_number'], self.time_stamp(), documentos,
+                resol_data['dte_resolution_number'], self.time_stamp(),
+                documentos,
                 signature_d, SubTotDTE)
             env = 'env'
             if is_doc_type_b:
@@ -1590,8 +1596,9 @@ respuesta satisfactoria por conexión ni de respuesta previa.')
             else:
                 envio_dte = self.create_template_env(dtes)
             envio_dte = self.sign_full_xml(
-                envio_dte, signature_d['priv_key'], certp, 'BMyA_Odoo_SetDoc', env)
-            #result = self.send_xml_file(envio_dte, file_name, company_id)
+                envio_dte, signature_d['priv_key'], certp, 'BMyA_Odoo_SetDoc',
+                env)
+            # result = self.send_xml_file(envio_dte, file_name, company_id)
             _logger.info('fin de preparacion y envio sii')
             for inv in self:
                 inv.save_xml_knowledge(envio_dte, file_name)
@@ -1897,13 +1904,13 @@ hacer eso en un envío')
     canceled = fields.Boolean(string="Canceled?")
     estado_recep_dte = fields.Selection(
         [('no_revisado', 'No Revisado'),
-            ('0', 'Conforme'),
-            ('1', 'Error de Schema'),
-            ('2', 'Error de Firma'),
-            ('3', 'RUT Receptor No Corresponde'),
-            ('90', 'Archivo Repetido'),
-            ('91', 'Archivo Ilegible'),
-            ('99', 'Envio Rechazado - Otros')],
+         ('0', 'Conforme'),
+         ('1', 'Error de Schema'),
+         ('2', 'Error de Firma'),
+         ('3', 'RUT Receptor No Corresponde'),
+         ('90', 'Archivo Repetido'),
+         ('91', 'Archivo Ilegible'),
+         ('99', 'Envio Rechazado - Otros')],
         string="Estado de Recepcion del Envio")
     estado_recep_glosa = fields.Char(
         string="Información Adicional del Estado de Recepción")
@@ -1933,7 +1940,7 @@ hacer eso en un envío')
         rel_invoices = self.search([
             ('number', '=', self.origin),
             ('state', 'not in',
-                ['draft', 'proforma', 'proforma2', 'cancel'])])
+             ['draft', 'proforma', 'proforma2', 'cancel'])])
         return rel_invoices
 
     @api.multi
@@ -2004,7 +2011,7 @@ hacer eso en un envío')
     @api.multi
     def get_barcode(self, no_product=False):
         ted = False
-        #folio = self.get_folio()
+        # folio = self.get_folio()
         folio = 12213
         result['TED']['DD']['RE'] = self.format_vat(self.company_id.vat)
         result['TED']['DD']['TD'] = self.sii_document_class_id.sii_code
@@ -2025,7 +2032,7 @@ hacer eso en un envío')
             if line.product_id.default_code:
                 result['TED']['DD']['IT1'] = self.normalize_string(
                     line.product_id.name.replace(
-                        '['+line.product_id.default_code+'] ', ''), 40)
+                        '[' + line.product_id.default_code + '] ', ''), 40)
             break
 
         resultcaf = self.get_caf_file()
@@ -2041,14 +2048,14 @@ hacer eso en un envío')
         dte = result['TED']['DD']
         # raise UserError(json.dumps(dte))
         dicttoxml.set_debug(False)
-        ddxml = '<DD>'+dicttoxml.dicttoxml(
+        ddxml = '<DD>' + dicttoxml.dicttoxml(
             dte, root=False, attr_type=False).replace(
             '<key name="@version">1.0</key>', '', 1).replace(
             '><key name="@version">1.0</key>', ' version="1.0">', 1).replace(
             '><key name="@algoritmo">SHA1withRSA</key>',
             ' algoritmo="SHA1withRSA">').replace(
             '<key name="#text">', '').replace(
-            '</key>', '').replace('<CAF>', '<CAF version="1.0">')+'</DD>'
+            '</key>', '').replace('<CAF>', '<CAF version="1.0">') + '</DD>'
         # prueva a remover para que no recodifique dos veces
         # ddxml = self.convert_encoding(ddxml, 'utf-8')
         keypriv = (resultcaf['AUTORIZACION']['RSASK']).encode(
