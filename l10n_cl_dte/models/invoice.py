@@ -16,7 +16,7 @@ import pytz
 import requests
 import urllib3
 import xmltodict
-from datetime import *
+from datetime import datetime as dt1
 from elaphe import barcode
 from lxml import etree
 from lxml.etree import Element, SubElement
@@ -285,7 +285,7 @@ class Invoice(models.Model):
     @staticmethod
     def safe_date(date):
         if not date:
-            date = datetime.now().strftime('%Y-%m-%d')
+            date = dt1.now().strftime('%Y-%m-%d')
         return date
 
     def normalize_string(
@@ -809,7 +809,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
     @staticmethod
     def time_stamp(format='%Y-%m-%dT%H:%M:%S'):
         tz = pytz.timezone('America/Santiago')
-        return datetime.now(tz).strftime(format)
+        return dt1.now(tz).strftime(format)
 
     @staticmethod
     def set_folio(inv, folio):
@@ -1037,8 +1037,8 @@ del CAF encontrado (desde {} hasta {}).'''.format(
         #    IdDoc['PeriodoDesde'] =
         #    IdDoc['PeriodoHasta'] =
         if not self.is_doc_type_b():
-            IdDoc['FchVenc'] = self.date_due or datetime.strftime(
-                datetime.now(), '%Y-%m-%d')
+            IdDoc['FchVenc'] = self.date_due or dt1.strftime(
+                dt1.now(), '%Y-%m-%d')
         return IdDoc
 
     def _sender(self):
@@ -1327,7 +1327,7 @@ Si necesita representar un descuento global, deberá utilizar el item \
             ref_line['NroLinRef'] = lin_ref
             ref_line['TpoDocRef'] = "SET"
             ref_line['FolioRef'] = self.get_folio()
-            ref_line['FchRef'] = datetime.strftime(datetime.now(),
+            ref_line['FchRef'] = dt1.strftime(dt1.now(),
                                                    '%Y-%m-%d')
             ref_line['RazonRef'] = "CASO " + att_number + "-" + str(
                 self.sii_batch_number)
@@ -1344,8 +1344,8 @@ Si necesita representar un descuento global, deberá utilizar el item \
                             ref.sii_referencia_TpoDocRef.sii_code
                         ref_line['FolioRef'] = ref.origen
                     ref_line['FchRef'] = ref.fecha_documento or \
-                                         datetime.strftime(
-                                             datetime.now(), '%Y-%m-%d')
+                                         dt1.strftime(
+                                             dt1.now(), '%Y-%m-%d')
                 if ref.sii_referencia_CodRef not in ['', 'none', False]:
                     ref_line['CodRef'] = ref.sii_referencia_CodRef
                 ref_line['RazonRef'] = ref.motivo
@@ -1458,7 +1458,7 @@ Algo a salido mal, revisar carátula''')}}
             self.company_id.dte_service_provider] + 'QueryEstDte.jws'
         _server = SOAPProxy(url, ns)
         receptor = self.format_vat(self.partner_id.vat)
-        date_invoice = datetime.strptime(
+        date_invoice = dt1.strptime(
             self.date_invoice, "%Y-%m-%d").strftime("%d%m%Y")
         rut = signature_d['subject_serial_number']
         try:
