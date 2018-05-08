@@ -7,8 +7,12 @@ import base64
 import collections
 import hashlib
 import json
+import logging
 import os
 import textwrap
+from datetime import datetime as dt1
+
+import cchardet
 import dicttoxml
 import M2Crypto
 import pysiidte
@@ -16,7 +20,6 @@ import pytz
 import requests
 import urllib3
 import xmltodict
-from datetime import datetime as dt1
 from elaphe import barcode
 from lxml import etree
 from lxml.etree import Element, SubElement
@@ -38,12 +41,13 @@ try:
     urllib3.disable_warnings()
 except ImportError:
     pass
+_logger = logging.getLogger(__name__)
 try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
 
-
+from OpenSSL.crypto import *
 normalize_tags = pysiidte.normalize_tags
 pluralizeds = pysiidte.pluralizeds
 result = xmltodict.parse(pysiidte.stamp)
@@ -87,7 +91,6 @@ def db_query(method):
         _logger.info('colnames: {}'.format(colnames))
         _logger.info('rows: {}'.format(rows))
         return to_json(colnames, rows)
-
     return call
 
 
@@ -543,40 +546,39 @@ version="1.0">
                     validation_result['result'], validation_result['msg']))
 
 
-        #        """
-        #        Funcion para validar los xml generados contra el esquema que le
-        #        corresponda segun el tipo de documento.
-        #        @author: Daniel Blanco Martin (daniel[at]blancomartin.cl)
-        #        @version: 2016-06-01. Se agregó validación para boletas
-        #        Modificada por Daniel Santibañez 2016-08-01
-        #        """
-        #        if validacion == 'bol':
-        #            return True
-        #        validacion_type = {
-        #            'doc': 'DTE_v10.xsd',
-        #            'env': 'EnvioDTE_v10.xsd',
-        #            'env_boleta': 'EnvioBOLETA_v11.xsd',
-        #            'recep': 'Recibos_v10.xsd',
-        #            'env_recep': 'EnvioRecibos_v10.xsd',
-        #            'env_resp': 'RespuestaEnvioDTE_v10.xsd',
-        #            'sig': 'xmldsignature_v10.xsd',
-        #            'book': 'LibroCV_v10.xsd',
-        #        }
-        #        xsd_file = xsdpath + validacion_type[validacion]
-        #        try:
-        #            xmlschema_doc = etree.parse(xsd_file)
-        #            xmlschema = etree.XMLSchema(xmlschema_doc)
-        #            xml_doc = etree.fromstring(some_xml_string)
-        #            result = xmlschema.validate(xml_doc)
-        #            if not result:
-        #                xmlschema.assert_(xml_doc)
-        #            return result
-        #        except AssertionError as e:
-        #            _logger.info(etree.tostring(xml_doc))
-        #            raise UserError(
-        #                _(u'Error de formación del XML: {} - Validación: {
-            # }').format(
-        #                    e.args, validacion))
+#        """
+#        Funcion para validar los xml generados contra el esquema que le
+#        corresponda segun el tipo de documento.
+#        @author: Daniel Blanco Martin (daniel[at]blancomartin.cl)
+#        @version: 2016-06-01. Se agregó validación para boletas
+#        Modificada por Daniel Santibañez 2016-08-01
+#        """
+#        if validacion == 'bol':
+#            return True
+#        validacion_type = {
+#            'doc': 'DTE_v10.xsd',
+#            'env': 'EnvioDTE_v10.xsd',
+#            'env_boleta': 'EnvioBOLETA_v11.xsd',
+#            'recep': 'Recibos_v10.xsd',
+#            'env_recep': 'EnvioRecibos_v10.xsd',
+#            'env_resp': 'RespuestaEnvioDTE_v10.xsd',
+#            'sig': 'xmldsignature_v10.xsd',
+#            'book': 'LibroCV_v10.xsd',
+#        }
+#        xsd_file = xsdpath + validacion_type[validacion]
+#        try:
+#            xmlschema_doc = etree.parse(xsd_file)
+#            xmlschema = etree.XMLSchema(xmlschema_doc)
+#            xml_doc = etree.fromstring(some_xml_string)
+#            result = xmlschema.validate(xml_doc)
+#            if not result:
+#                xmlschema.assert_(xml_doc)
+#            return result
+#        except AssertionError as e:
+#            _logger.info(etree.tostring(xml_doc))
+#            raise UserError(
+#                _(u'Error de formación del XML: {} - Validación: {}').format(
+#                    e.args, validacion))
 
     def send_xml_file(self, envio_dte=None, file_name="envio", company_id=False,
                       sii_result='NoEnviado', doc_ids=''):
@@ -1145,6 +1147,7 @@ realizar en su documento.""")
             discount['DscRcgGlobal']['IndExeDR'] = i
             j += 1
             discounts.append(discount)
+        # raise UserError(json.dumps(discounts))
         return discounts
 
     def _totals(self, MntExe=0, no_product=False, tax_include=False,
@@ -1153,7 +1156,7 @@ realizar en su documento.""")
         # esto sobreescribe el calculo del mntexe que viene por parametros
         # para hacer: corregir desde antes, o cambiar el metodo de calcular
         # para hacer: el mntexe siempre existe solo que si no hay neto, se
-        # debe validar que el tipo de documento valido para estos casos debe
+        # debe validate que el tipo de documento valido para estos casos debe
         # ser exenta
         if self.sii_document_class_id.sii_code == 34 or (
                     self.referencias and self.referencias[0].
@@ -1615,7 +1618,7 @@ respuesta satisfactoria por conexión ni de respuesta previa.')
             'Connection': u'close',
             'Content-Type': u'multipart/form-data;\
 boundary=33b4531a79be4b278de5f5688fab7701',
-            'User-Agent': u'python-requests/2.2.1 CPython/2.7.6 Darwin/13.2.0', 
+            'User-Agent': u'python-requests/2.2.1 CPython/2.7.6 Darwin/13.2.0',
         }
         r = requests.post(
             host + '/dte/hgen/token', files=dict(file_upload=file_upload))
@@ -2092,16 +2095,16 @@ hacer eso en un envío')
             'tag': 'action_upload_xml_wizard'}
 
     @api.multi
-    def wizard_validar(self):
+    def wizard_validate(self):
         return {
             'type': 'ir.actions.act_window',
-            'res_model': 'sii.dte.validar.wizard',
+            'res_model': 'sii.dte.validate.wizard',
             'src_model': 'account.invoice',
             'view_mode': 'form',
             'view_type': 'form',
             'views': [(False, 'form')],
             'target': 'new',
-            'tag': 'action_validar_wizard'}
+            'tag': 'action_validate_wizard'}
 
     @api.multi
     def invoice_print(self):

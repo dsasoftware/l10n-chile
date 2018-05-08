@@ -125,7 +125,7 @@ xmldsig#}Reference/{http://www.w3.org/2000/09/xmldsig#}DigestValue").text:
                         return 1, 'DTE No Recibido - Error de Firma'
         return 0, 'DTE Recibido OK'
 
-    def _validar_caratula(self, cara):
+    def _validate_caratula(self, cara):
         if not self.env['res.company'].search([
                 ('vat', '=', self.format_native_vat(cara['RutReceptor']))]):
             return 3, 'Rut no corresponde a nuestra empresa'
@@ -152,13 +152,13 @@ xmldsig#}Reference/{http://www.w3.org/2000/09/xmldsig#}DigestValue").text:
         #        return  99, 'Tipo de documento desconocido'
         return 0, u'Envío Ok'
 
-    def _validar(self, doc):
-        cara, glosa = self._validar_caratula(doc[0][0]['Caratula'])
+    def _validate(self, doc):
+        cara, glosa = self._validate_caratula(doc[0][0]['Caratula'])
         if cara != 0:
             return cara, glosa
         return 0, ''
 
-    def _validar_dte(self, doc):
+    def _validate_dte(self, doc):
         res = collections.OrderedDict()
         res['TipoDTE'] = doc['Encabezado']['IdDoc']['TipoDTE']
         res['Folio'] = doc['Encabezado']['IdDoc']['Folio']
@@ -199,12 +199,12 @@ xmldsig#}Reference/{http://www.w3.org/2000/09/xmldsig#}DigestValue").text:
             return res
         return res
 
-    def _validar_dtes(self):
+    def _validate_dtes(self):
         envio = self._read_xml('parse')
         soup = bs(envio, 'xml')
         #if soup.find('Documento'):
 
-        #res.extend([{'RecepcionDTE': self._validar_dte(doc['Documento'])}])
+        #res.extend([{'RecepcionDTE': self._validate_dte(doc['Documento'])}])
         #return res
 
     def _caratula_respuesta(
@@ -232,7 +232,7 @@ xmldsig#}Reference/{http://www.w3.org/2000/09/xmldsig#}DigestValue").text:
 Signature/{http://www.w3.org/2000/09/xmldsig#}SignedInfo/{http://www.w3.org/\
 2000/09/xmldsig#}Reference/{http://www.w3.org/2000/09/xmldsig#}\
 DigestValue").text
-        EstadoRecepEnv, RecepEnvGlosa = self._validar_caratula(
+        EstadoRecepEnv, RecepEnvGlosa = self._validate_caratula(
             envio['EnvioDTE']['SetDTE']['Caratula'])
         if EstadoRecepEnv == 0:
             EstadoRecepEnv, RecepEnvGlosa = self._check_digest_caratula()
@@ -245,7 +245,7 @@ DigestValue").text
         if 'Documento' in envio['EnvioDTE']['SetDTE']['DTE']:
             NroDte = 1
         resp['NroDTE'] = NroDte
-        resp['item'] = self._validar_dtes()
+        resp['item'] = self._validate_dtes()
         return resp
 
     def _recepcion_envio(self, Caratula, resultado):
@@ -345,7 +345,7 @@ signature.'''))
                 message_type='comment', subtype='mt_comment')
         return resp
 
-    def _validar_dte_en_envio(self, doc, IdRespuesta):
+    def _validate_dte_en_envio(self, doc, IdRespuesta):
         res = collections.OrderedDict()
         res['TipoDTE'] = doc['Encabezado']['IdDoc']['TipoDTE']
         res['Folio'] = doc['Encabezado']['IdDoc']['Folio']
@@ -387,13 +387,13 @@ signature.'''))
     def _resultado(self, IdRespuesta):
         envio = self._read_xml('parse')
         if 'Documento' in envio['EnvioDTE']['SetDTE']['DTE']:
-            return {'ResultadoDTE': self._validar_dte_en_envio(
+            return {'ResultadoDTE': self._validate_dte_en_envio(
                 envio['EnvioDTE']['SetDTE']['DTE']['Documento'], IdRespuesta)}
         else:
             for doc in envio['EnvioDTE']['SetDTE']['DTE']:
                 if doc['Documento']['Encabezado']['IdDoc'][
                         'Folio'] == self.inv.reference:
-                    return {'ResultadoDTE': self._validar_dte_en_envio(
+                    return {'ResultadoDTE': self._validate_dte_en_envio(
                         doc['Documento'], IdRespuesta)}
         return False
 
@@ -411,7 +411,7 @@ xsi:schemaLocation="http://www.sii.cl/SiiDte RespuestaEnvioDTE_v10.xsd" >
 </RespuestaDTE>'''.format(Caratula,resultado)
         return resp
 
-    def do_validar_comercial(self):
+    def do_validate_comercial(self):
         id_seq = self.env.ref('l10n_cl_dte.response_sequence').id
         IdRespuesta = self.env['ir.sequence'].browse(id_seq).next_by_id()
         for inv in self.inv:

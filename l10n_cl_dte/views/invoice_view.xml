@@ -159,7 +159,7 @@
                             <button string="Subir XML" type="object"
                                     name="wizard_upload"
                                     attrs="{'invisible':[('state', 'in', ['paid']), '|', ('sii_xml_request','!=', False)]}"/>
-                            <button string="Validar DTE" type="object" class="oe_highlight" name="wizard_validar" attrs="{
+                            <button string="Validar DTE" type="object" class="oe_highlight" name="wizard_validate" attrs="{
                                   'readonly':[('estado_recep_dte', 'in', ['','NoEnviado','Proceso'])],
                                   'invisible':[('state', 'in', ['draft']), ('estado_recep_dte','in',['','NoEnviado'])]}"/>
                             <field name='estado_recep_dte' widget="statusbar"/>

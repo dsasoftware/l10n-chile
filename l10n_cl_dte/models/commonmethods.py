@@ -47,7 +47,7 @@ addons: permitiendo así seguir el principio "DRY" de Python.
 el value[0] de la lista representa la longitud admitida
 Propuesta:
 todo: el value[1] si es obligatorio o no
-todo: el value[2] puede ser la llamada a funcion para validar
+todo: el value[2] puede ser la llamada a funcion para validate
 todo: el value[3] el nombre de campo mapeado en Odoo
 @author: Daniel Blanco Martín daniel[at]blancomartin.cl
 @version: 2017-02-11

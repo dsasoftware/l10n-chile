@@ -3,4 +3,4 @@
 #from . import sii_ws_currency_rate_wizard
 from . import masive_send_dte
 # from . import upload_xml
-from . import validar
+from . import validate
