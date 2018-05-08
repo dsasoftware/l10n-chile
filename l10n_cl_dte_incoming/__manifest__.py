@@ -14,6 +14,7 @@
         'l10n_cl_counties',
         'l10n_cl_invoice',
         'l10n_cl_dte',
+        ''
         ],
     'external_dependencies': {
         'python': [
