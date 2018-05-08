@@ -103,6 +103,13 @@ class IncomingDTE(models.Model):
             ('code', '=', warehouse_name)])
         return stock_wh_name
 
+    def _choose_workflow(self):
+        workflow_name = self.name.split(' ')[0]
+        stock_wf_obj = self.env['sale.workflow.process']
+        stock_wf_name = stock_wf_obj.search([
+            ('name', 'ilike', workflow_name)])
+        return stock_wf_name
+
     def create_sale_order(self):
         for x in self:
             if x.type == 'out_dte':
@@ -128,8 +135,8 @@ class IncomingDTE(models.Model):
                         partner_id = x.create_sale_partner(
                             partner_obj, bsoup.Receptor)
                     detail = bsoup.find_all('Detalle')
-
                     warehouse_id = x._choose_warehouse()
+                    workflow_id = x._choose_workflow()
                     order_new = x.format_sale_order(
                         saorder_obj, partner_id, detail, warehouse_id)
                     _logger.info(detail)
@@ -138,7 +145,9 @@ class IncomingDTE(models.Model):
                         'partner_id': partner_id.id,
                         'flow_status': 'order',
                         'sale_order_id': order_new.id,
-                        'warehouse_id': warehouse_id.id, })
+                        'warehouse_id': warehouse_id.id,
+                        'workflow_process_id': workflow_id.id,
+                    })
                     order_new.action_confirm()
                     # la orden de confirmación se cambia a la hora real.
                     order_new.write({'confirmation_date': x.date_received})
