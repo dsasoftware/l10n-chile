@@ -402,10 +402,13 @@ class AccountInvoice(models.Model):
             self.env.ref('l10n_cl_invoice.dc_y_f_dte').id,
             self.env.ref('l10n_cl_invoice.dc_b_e_dtn').id,
             self.env.ref('l10n_cl_invoice.dc_b_e_dte').id]
-        if self.journal_document_class_id.sii_document_class_id.id in \
-                exempt_ids:
-            self.fiscal_position_id = self.env.ref(
-                'l10n_cl_invoice.exempt_fp')
+        try:
+            if self.journal_document_class_id.sii_document_class_id.id in \
+                    exempt_ids:
+                self.fiscal_position_id = self.env.ref(
+                    'l10n_cl_invoice.exempt_fp')
+        except ValueError:
+            pass
 
     @api.onchange('sii_document_class_id')
     def _check_vat(self):
