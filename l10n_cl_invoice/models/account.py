@@ -4,14 +4,17 @@ from openerp.exceptions import Warning
 import logging
 _logger = logging.getLogger(__name__)
 
+
 class SiiTaxTemplate(models.Model):
     _inherit = 'account.tax.template'
 
     sii_code = fields.Integer('SII Code')
     sii_type = fields.Selection([ ('A','Anticipado'),('R','Retención')], string="Tipo de impuesto para el SII")
     retencion = fields.Float(string="Valor retención", default=0.00)
-    no_rec = fields.Boolean(string="Es No Recuperable")#esto es distinto al código no recuperable, depende del manejo de recuperación de impuesto
+    no_rec = fields.Boolean(string="Es No Recuperable")
+    # esto es distinto al código no recuperable, depende del manejo de recuperación de impuesto
     activo_fijo = fields.Boolean(string="Activo Fijo", default=False)
+
 
 class SiiTax(models.Model):
     _inherit = 'account.tax'
@@ -19,7 +22,8 @@ class SiiTax(models.Model):
     sii_code = fields.Integer('SII Code')
     sii_type = fields.Selection([ ('A','Anticipado'),('R','Retención')], string="Tipo de impuesto para el SII")
     retencion = fields.Float(string="Valor retención", default=0.00)
-    no_rec = fields.Boolean(string="Es No Recuperable")#esto es distinto al código no recuperable, depende del manejo de recuperación de impuesto
+    no_rec = fields.Boolean(string="Es No Recuperable")
+    # esto es distinto al código no recuperable, depende del manejo de recuperación de impuesto
     activo_fijo = fields.Boolean(string="Activo Fijo", default=False)
 
     @api.v8
@@ -60,11 +64,12 @@ class SiiTax(models.Model):
         prec = currency.decimal_places
         base = round(price_unit * quantity, prec+2)
         base = round(base, prec)
-        tot_discount = round(base * ((discount or 0.0) /100))
+        tot_discount = round(base * ((discount or 0.0) / 100))
         base -= tot_discount
         total_excluded = total_included = base
 
-        if company_id.tax_calculation_rounding_method == 'round_globally' or not bool(self.env.context.get("round", True)):
+        if company_id.tax_calculation_rounding_method == 'round_globally' or not bool(
+                self.env.context.get("round", True)):
             prec += 5
 
         # Sorting key is mandatory in this case. When no key is provided, sorted() will perform a
@@ -83,14 +88,16 @@ class SiiTax(models.Model):
                 continue
 
             tax_amount = tax._compute_amount(base, price_unit, quantity, product, partner)
-            if company_id.tax_calculation_rounding_method == 'round_globally' or not bool(self.env.context.get("round", True)):
+            if company_id.tax_calculation_rounding_method == 'round_globally' or not bool(
+                    self.env.context.get("round", True)):
                 tax_amount = round(tax_amount, prec)
             else:
                 tax_amount = currency.round(tax_amount)
             tax_amount_retencion = 0
             if tax.sii_type in ['R']:
                 tax_amount_retencion = tax._compute_amount_ret(base, price_unit, quantity, product, partner)
-                if company_id.tax_calculation_rounding_method == 'round_globally' or not bool(self.env.context.get("round", True)):
+                if company_id.tax_calculation_rounding_method == 'round_globally' or not bool(
+                        self.env.context.get("round", True)):
                     tax_amount_retencion = round(tax_amount_retencion, prec)
                 if tax.price_include:
                     total_excluded -= (tax_amount - tax_amount_retencion )
@@ -125,8 +132,10 @@ class SiiTax(models.Model):
 
         return {
             'taxes': sorted(taxes, key=lambda k: k['sequence']),
-            'total_excluded': currency.round(total_excluded) if bool(self.env.context.get("round", True)) else total_excluded,
-            'total_included': currency.round(total_included) if bool(self.env.context.get("round", True)) else total_included,
+            'total_excluded': currency.round(total_excluded) if bool(
+                self.env.context.get("round", True)) else total_excluded,
+            'total_included': currency.round(total_included) if bool(
+                self.env.context.get("round", True)) else total_included,
             'base': base,
             }
 
@@ -142,13 +151,13 @@ class SiiTax(models.Model):
             neto = base_amount / (1 + self.retencion / 100)
             tax = base_amount - neto
             return tax
-        if (self.amount_type == 'percent' and not self.price_include) or (self.amount_type == 'division' and self.price_include):
+        if (self.amount_type == 'percent' and not self.price_include) or (
+                self.amount_type == 'division' and self.price_include):
             return base_amount * self.retencion / 100
 
-class account_move(models.Model):
+
+class AccountMove(models.Model):
     _inherit = "account.move"
-
-
     """
     def _get_document_data(self, cr, uid, ids, name, arg, context=None):
         res = {}
@@ -194,7 +203,8 @@ class account_move(models.Model):
                     ('4','Entregas gratuitas (premios, bonificaciones, etc.) recibidos.'),
                     ('9','Otros.')],
                     string="Código No recuperable",
-                    readonly=True, states={'draft': [('readonly', False)]})# @TODO select 1 automático si es emisor 2Categoría
+                    readonly=True, states={'draft': [('readonly', False)]})
+    # TODO select 1 automático si es emisor 2 Categoría
 
     document_number = fields.Char(
         compute='_get_document_number',
@@ -267,7 +277,7 @@ class AccountMoveLine(models.Model):
         )
 
 
-class account_journal_sii_document_class(models.Model):
+class AccountJournalSiiDocumentClass(models.Model):
     _name = "account.journal.sii_document_class"
     _description = "Journal SII Documents"
     _order = 'sequence'
@@ -288,7 +298,6 @@ class account_journal_sii_document_class(models.Model):
     journal_id = fields.Many2one(
         'account.journal', 'Journal', required=True)
     sequence = fields.Integer('Sequence',)
-    # short_name = fields.Char('Short Title')
 
 
 class AccountJournal(models.Model):
@@ -296,6 +305,7 @@ class AccountJournal(models.Model):
 
     # redefine el type original para que sea igual que 8 y no haga falta cambiar
     # el tratamiento
+    '''
     type = fields.Selection(
         [('sale', 'Sale'),
          ('sale_refund', 'Sale Refunds'),
@@ -304,6 +314,8 @@ class AccountJournal(models.Model):
          ('cash', 'Cash'),
          ('bank', 'Bank'),
          ('general', 'General'), ], string='Type')
+    '''
+
     sucursal_id = fields.Many2one(
         'sii.sucursal',
         string="Sucursal")
@@ -367,6 +379,7 @@ class AccountJournal(models.Model):
         if self.point_of_sale_id and self.point_of_sale_id.company_id != self.company_id:
             raise Warning(_('The company of the point of sale and of the \
                 journal must be the same!'))
+
 
 class ResCurrency(models.Model):
     _inherit = "res.currency"
