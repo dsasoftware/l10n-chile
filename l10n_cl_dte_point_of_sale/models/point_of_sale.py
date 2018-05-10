@@ -819,10 +819,10 @@ www.sii.cl'''.format(folio, folio_inicial, folio_final)
                     #    if document_classes.ids:
                     #        # revisar si hay condicion de exento, para poner como primera alternativa estos
                     #        document_class_id = self.get_document_class_default(document_classes)
-                    if invoice_type  in [ 'in_refund', 'out_refund']:
-                        domain += [('sii_document_class_id.document_type','in',['debit_note','credit_note'] )]
+                    if invoice_type in ['in_refund', 'out_refund']:
+                        domain += [('sii_document_class_id.document_type', 'in', ['debit_note', 'credit_note'])]
                     else:
-                        domain += [('sii_document_class_id.document_type','in',['invoice','invoice_in'] )]
+                        domain += [('sii_document_class_id.document_type', 'in', ['invoice', 'invoice_in'])]
 
                     # For domain, we search all documents
                     document_classes = self.env[
@@ -913,7 +913,7 @@ www.sii.cl'''.format(folio, folio_inicial, folio_final)
             jdc_ob = self.pool.get('account.journal.sii_document_class')
             journal_document_class_id = jdc_ob.browse(cr, uid, jdc_ob.search(cr, uid,
                     [
-                        ('journal_id','=', order.sale_journal.id),
+                        ('journal_id', '=', order.sale_journal.id),
                         ('sii_document_class_id.sii_code', 'in', ['33', '34']),
                     ], context=context), context=context)
             if not journal_document_class_id:

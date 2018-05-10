@@ -707,24 +707,22 @@ xsi:schemaLocation="http://www.sii.cl/SiiDte Recibos_v10.xsd" >
         name = self.filename.decode('ISO-8859-1').encode('UTF-8')
         xml =base64.b64decode(self.xml_file).decode('ISO-8859-1')
         return {
-            'origin' : 'XML Envío: ' + name,
+            'origin': 'XML Envío: ' + name,
             'reference': dte['Encabezado']['IdDoc']['Folio'],
-            'date_invoice' :dte['Encabezado']['IdDoc']['FchEmis'],
-            'partner_id' : partner_id.id,
-            'company_id' : company_id.id,
+            'date_invoice': dte['Encabezado']['IdDoc']['FchEmis'],
+            'partner_id': partner_id.id,
+            'company_id': company_id.id,
             'account_id': partner_id.property_account_payable_id.id,
             'journal_id': journal_document_class_id.journal_id.id,
             'turn_issuer': company_id.company_activities_ids[0].id,
-            'journal_document_class_id':journal_document_class_id.id,
-            'sii_xml_request': xml ,
-            'sii_send_file_name': name,
-        }
+            'journal_document_class_id': journal_document_class_id.id,
+            'sii_xml_request': xml,
+            'sii_send_file_name': name, }
 
     def _get_journal(self, sii_code, company_id):
         journal_sii = self.env['account.journal.sii_document_class'].search(
                 [('sii_document_class_id.sii_code', '=', sii_code),
-                ('journal_id.type', '=', 'purchase'), ],
-        )[0]
+                 ('journal_id.type', '=', 'purchase'), ], )[0]
         return journal_sii
 
     def _create_inv(self, dte, company_id):

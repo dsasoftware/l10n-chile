@@ -13,8 +13,7 @@ class sii_ws_consult_wizard(models.TransientModel):
 
     number = fields.Integer(
         'Number',
-        required=True,
-        )
+        required=True, )
 
     @api.multi
     def confirm(self):
@@ -24,6 +23,5 @@ class sii_ws_consult_wizard(models.TransientModel):
             raise Warning(_(
                 'No Journal Document Class as active_id on context'))
         journal_doc_class = self.env[
-            'account.journal.sii_document_class'].browse(
-            journal_sii_document_class_id)
+            'account.journal.sii_document_class'].browse(journal_sii_document_class_id)
         return journal_doc_class.get_pysiiws_consult_invoice(self.number)

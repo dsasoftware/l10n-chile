@@ -20,10 +20,9 @@ class PosConfig(models.Model):
             inv.available_journal_document_class_ids = self.env[
                 'account.journal.sii_document_class']
 
-
     available_journal_document_class_ids = fields.Many2many(
         'account.journal.sii_document_class',
-    #    compute='_get_available_journal_document_class',
+        compute='_get_available_journal_document_class',
         string='Available Journal Document Classes')
 
     sii_document_class_id = fields.Many2one(

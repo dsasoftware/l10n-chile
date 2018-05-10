@@ -346,7 +346,6 @@ class AccountInvoice(models.Model):
         document_class_id = False
         self.available_journal_document_class_ids = self.env[
             'account.journal.sii_document_class']
-
         if invoice_type in [
                 'out_invoice', 'in_invoice', 'out_refund', 'in_refund']:
             operation_type = self.get_operation_type(invoice_type)

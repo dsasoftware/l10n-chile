@@ -85,16 +85,15 @@ invoice should be unreconciled first. You can only refund this invoice.'))
                     refund.compute_taxes()
                 type = inv.type
                 _logger.info('type: %s'%inv.type)
-                if inv.type in [ 'out_invoice','out_refund']:
+                if inv.type in ['out_invoice', 'out_refund']:
                     refund.type = 'out_refund'
-                elif inv.type in ['in_invoice','in_refund']:
+                elif inv.type in ['in_invoice', 'in_refund']:
                     refund.type = 'in_refund'
 
                 created_inv.append(refund.id)
                 document_type = self.env['account.journal.sii_document_class'].search([
-                    ('sii_document_class_id.sii_code','=', self.tipo_nota.sii_code),
-                    ('journal_id','=', inv.journal_id.id)
-                    ],limit=1)
+                    ('sii_document_class_id.sii_code', '=', self.tipo_nota.sii_code),
+                    ('journal_id', '=', inv.journal_id.id)], limit=1)
 
                 refund.update(
                     {

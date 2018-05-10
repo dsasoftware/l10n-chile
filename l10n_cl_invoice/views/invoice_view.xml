@@ -85,6 +85,7 @@
                              'invisible':[('use_documents','=',False)],
                              'required':[('use_documents','=',True)],
                              'readonly':['|', ('state', '!=', 'draft'), ('sii_document_number','!=',False)]}"
+                        domain="[('journal_id', '=', journal_id)]"
                         options="{'no_create': True}" />
                         <!--domain="[('journal_document_class_id', 'in', available_journal_document_class_ids)]"-->
                     <field name="turn_issuer"
@@ -214,8 +215,10 @@
                                 'required':[('use_documents','=',True)],
                                 'readonly':[
                                     '|',('state','!=','draft')]}"
-                            domain="[('id','in',available_journal_document_class_ids[0][2])]"
-                            options="{'no_create': True}"/>
+                            options="{'no_create': True}"
+                           domain="[('journal_id', '=', journal_id)]"
+                    />
+                    <!--domain="[('id','in',available_journal_document_class_ids[0][2])]"-->
                 </field>
                 <field name="turn_issuer" position="attributes">
                     <attribute name="string">Giro de compra</attribute>
