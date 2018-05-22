@@ -17,7 +17,7 @@
 ##############################################################################
 {
     'name': 'Webservice que consulta contribuyentes en Documentos Online',
-    'version': '10.0.1.0.0',
+    'version': '10.0.1.0.1',
     'category': 'BMYA Enhancements/Localization',
     'description': """
 Webservice rut -> giros, dte de intercambio

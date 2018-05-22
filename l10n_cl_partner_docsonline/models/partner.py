@@ -91,7 +91,11 @@ www.documentosonline.cl')
             _logger.info('Error al obtener datos del contribuyente:')
             return {'error': 'Error al obtener datos del contribuyente'}
         else:
-            partner_values = json.loads(r.text)['result']
+            try:
+                partner_values = json.loads(r.text)['result']
+            except KeyError:
+                raise UserError('El RUT consultado no se encuentra en la base de datos de www.documentosonline.cl. \
+                deberá consultar los datos de facturación al cliente o vuelva a consultar en el futuro.')
             _logger.info('Conexion correcta: %s' % partner_values)
             try:
                 if partner_values['error']:
